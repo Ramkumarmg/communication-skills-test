@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Test Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm, clinical exam room — quiet, exact, reassuring.
+   IDEA: an exam console like the real test software: one task at a time, a clock, a progress strip.
+   PICTURE: the live task card itself (passage, listening pulse, mic, timer ring).
+   COLOUR and TYPE: exam-console blue field, white paper, coral only for time/recording; Figtree UI, Source Serif for passages.
+   LAYOUT: blue header band with part strip, one centered column for the task, results as a report card. */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#0e1320);--paper:light-dark(#ffffff,#141b2c);--soft:light-dark(#f2f5fc,#182035);
+--ink:light-dark(#121b2a,#e9eef8);--mute:light-dark(#566176,#9aa6bd);--line:light-dark(#dde3ee,#273149);
+--brand:light-dark(#1f45d6,#6e8dff);--brand2:light-dark(#14309e,#3d5fe0);--band:light-dark(#1f45d6,#1a2c78);
+--hot:light-dark(#e5432f,#ff7563);--ok:light-dark(#0f7a45,#4ccf8c);--mid:light-dark(#a86400,#f0b44c);--bad:light-dark(#c4291f,#ff7a70)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Figtree,system-ui,sans-serif;overflow-x:clip}
+button{font:inherit}
+.top{background:var(--band);color:#fff;padding:14px max(4vw,16px) 0}
+.toprow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:1080px;margin:0 auto}
+.brand{font-weight:800;font-size:17px;letter-spacing:.1px;margin-right:auto}
+.brand small{display:block;font-weight:500;opacity:.8;font-size:13px}
+.clock{display:none;align-items:center;gap:10px;background:rgba(255,255,255,.14);border-radius:999px;padding:6px 14px 6px 8px;font-variant-numeric:tabular-nums;font-weight:700;font-size:18px}
+.clock.on{display:flex}.clock.warn{background:var(--hot)}
+.ring{width:26px;height:26px}
+.endbtn{display:none;background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;min-height:40px}
+.endbtn.on{display:inline-block}
+.strip{display:flex;gap:4px;max-width:1080px;margin:14px auto 0;padding-bottom:12px;overflow-x:auto}
+.seg{flex:1 1 0;min-width:44px;text-align:center;font-size:13px;font-weight:600;padding:6px 4px;border-radius:6px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.75);white-space:nowrap}
+.seg.done{background:rgba(255,255,255,.3);color:#fff}.seg.cur{background:#fff;color:var(--brand2)}
+main{max-width:1080px;margin:0 auto;padding:clamp(20px,4vw,44px) max(4vw,16px) 60px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:clamp(20px,3.4vw,36px);box-shadow:0 1px 0 var(--line),0 12px 32px -20px rgba(20,40,120,.35)}
+.task{max-width:820px;margin:0 auto}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.06;margin:0 0 12px;text-wrap:balance;font-weight:800}
+h2{font-size:24px;line-height:1.2;margin:0 0 10px}
+h3{font-size:17px;margin:0 0 6px}
+.lede{font-size:18px;color:var(--mute);max-width:62ch;margin:0 0 22px}
+.mute{color:var(--mute)}.small{font-size:14px}
+.qhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:16px}
+.qhead b{font-size:15px;color:var(--brand)}.qhead span{font-size:14px;color:var(--mute)}
+.inst{font-size:17px;margin:0 0 18px}
+.passage{font-family:"Source Serif 4",Georgia,serif;font-size:clamp(18px,2.2vw,21px);line-height:1.7;background:var(--soft);border-radius:12px;padding:20px 22px;user-select:none;-webkit-user-select:none}
+.passage p{margin:0 0 12px}.passage p:last-child{margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 20px;border-radius:10px;border:0;background:var(--brand);color:#fff;font-weight:700;cursor:pointer;font-size:16px}
+.btn:hover{background:var(--brand2)}.btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+.btn:focus-visible,textarea:focus-visible,input:focus-visible,.mode:focus-visible{outline:3px solid var(--hot);outline-offset:2px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:18px}
+textarea,input[type=text]{width:100%;font:17px/1.55 Figtree,system-ui,sans-serif;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px}
+textarea{min-height:120px;resize:vertical}
+.blank{display:inline-block;width:min(220px,60vw);font-size:19px;padding:6px 10px;border:0;border-bottom:2.5px solid var(--brand);border-radius:6px 6px 0 0;background:var(--soft)}
+.sent{font-family:"Source Serif 4",Georgia,serif;font-size:clamp(20px,2.6vw,25px);line-height:1.9}
+.listen{display:flex;align-items:center;gap:18px;padding:26px;border-radius:14px;background:var(--soft);margin:6px 0 4px}
+.bars{display:flex;gap:5px;align-items:center;height:46px}
+.bars i{display:block;width:7px;height:10px;border-radius:4px;background:var(--brand);opacity:.35}
+.listen.on .bars i{opacity:1;animation:b 0.9s ease-in-out infinite}
+.bars i:nth-child(2){animation-delay:.12s!important}.bars i:nth-child(3){animation-delay:.24s!important}.bars i:nth-child(4){animation-delay:.36s!important}.bars i:nth-child(5){animation-delay:.48s!important}
+@keyframes b{0%,100%{height:10px}50%{height:44px}}
+.listen b{display:block;font-size:18px}.flash{font-family:"Source Serif 4",serif;font-size:20px;margin-top:6px}
+.mic{display:flex;flex-direction:column;align-items:center;gap:12px;padding:22px;border:1.5px dashed var(--line);border-radius:14px;margin-top:18px;text-align:center}
+.micbtn{width:96px;height:96px;border-radius:50%;border:0;background:var(--brand);color:#fff;cursor:pointer;display:grid;place-items:center;box-shadow:0 8px 20px -8px var(--brand)}
+.micbtn.rec{background:var(--hot);animation:p 1.3s ease-out infinite}
+@keyframes p{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hot) 55%,transparent)}100%{box-shadow:0 0 0 22px transparent}}
+.live{min-height:28px;font-size:17px;max-width:60ch;color:var(--mute)}
+.kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2.5px;border-radius:6px;padding:0 7px;font-size:13px;font-weight:700}
+.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
+.modes{display:grid;gap:12px}
+.mode{display:block;width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:16px 18px;cursor:pointer;color:var(--ink)}
+.mode:hover{border-color:var(--brand)}.mode b{font-size:18px;display:block}.mode span{color:var(--mute);font-size:15px}
+.mode.main{background:var(--brand);border-color:var(--brand);color:#fff}.mode.main span{color:rgba(255,255,255,.85)}
+.drills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:8px 14px;cursor:pointer;min-height:40px;font-size:14px;font-weight:600}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}.chip.on::before{content:"\2713  "}
+.check{display:grid;gap:10px}
+.ck{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border-radius:10px;background:var(--soft)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mute);margin-right:8px}
+.dot.ok{background:var(--ok)}.dot.no{background:var(--bad)}.dot.mid{background:var(--mid)}
+.sec{margin-top:34px}
+.linkbtn{background:none;border:0;color:var(--brand);text-decoration:underline;cursor:pointer;font-size:14px;padding:6px;min-height:36px}
+.ckw{display:grid;gap:0}.ckp{display:flex;gap:12px;align-items:flex-start;margin:6px 0 4px;padding:12px 14px;border-radius:10px;font-size:15px;line-height:1.5;border:1.5px solid var(--line)}
+.ckp:empty{display:none}.ckp ul{margin:6px 0 4px;padding-left:18px}.ckp .btn{min-height:40px;padding:8px 14px;font-size:15px}
+.ckp.act{border-color:var(--brand)}.ckp.ask{border-color:var(--brand);background:var(--soft)}
+.ckp.rec{border-color:var(--hot)}.ckp.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.ckp.warn{border-color:var(--mid);background:color-mix(in srgb,var(--mid) 10%,transparent)}.ckp.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,transparent)}
+.heard{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--soft);font-family:"Source Serif 4",Georgia,serif;font-size:17px}
+.recdot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--hot);margin-right:8px;animation:bl 1s steps(2) infinite}@keyframes bl{50%{opacity:.2}}
+.bars.sm{height:30px;flex:none}.bars.sm i{width:5px;opacity:1;animation:b .9s ease-in-out infinite}.bars.sm i:nth-child(2){animation-delay:.12s}.bars.sm i:nth-child(3){animation-delay:.24s}.bars.sm i:nth-child(4){animation-delay:.36s}.bars.sm i:nth-child(5){animation-delay:.48s}
+
+.parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.pt{padding:12px 14px;border:1px solid var(--line);border-radius:10px}.pt b{color:var(--brand)}
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center}
+.big{font-size:clamp(64px,10vw,104px);font-weight:800;line-height:.9;color:var(--brand);font-variant-numeric:tabular-nums}
+.big small{font-size:22px;color:var(--mute);font-weight:600}
+.lvl{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--soft);font-weight:700;margin:6px 0}
+.skill{display:grid;grid-template-columns:110px minmax(0,1fr) 48px;gap:12px;align-items:center;margin:10px 0}
+.track{height:14px;border-radius:7px;background:var(--soft);overflow:hidden;position:relative}
+.fill{height:100%;border-radius:7px;background:var(--brand)}
+.skill b{text-align:right;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--mute);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tips{display:grid;gap:12px}
+.tip{padding:14px 16px;border-radius:12px;background:var(--soft);border-left:4px solid var(--brand)}
+.tip.w{border-left-color:var(--hot)}
+details.rv{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:var(--paper)}
+details.rv>summary{cursor:pointer;padding:14px 16px;font-weight:700;display:flex;justify-content:space-between;gap:10px;list-style:none}
+details.rv>summary::-webkit-details-marker{display:none}
+.it{padding:12px 16px;border-top:1px solid var(--line);font-size:15px}
+.it .lab{font-size:13px;color:var(--mute);font-weight:600}
+.mk{font-weight:800;margin-right:6px}.mk.ok{color:var(--ok)}.mk.mid{color:var(--mid)}.mk.bad{color:var(--bad)}
+.miss{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad);text-decoration:line-through;padding:0 2px;border-radius:3px}
+.sub{background:color-mix(in srgb,var(--mid) 22%,transparent);padding:0 2px;border-radius:3px}
+.extra{color:var(--mid);font-style:italic}
+.note{font-size:14px;color:var(--mute);margin-top:4px}
+.modal{position:fixed;inset:0;background:rgba(5,10,25,.55);display:none;place-items:center;padding:16px;z-index:9}
+.modal.on{display:grid}.modal .card{max-width:440px}
+.wc{font-size:14px;color:var(--mute);margin-top:6px;font-variant-numeric:tabular-nums}.wc.ok{color:var(--ok)}
+.hist{display:grid;gap:6px}
+.hr{display:grid;grid-template-columns:150px minmax(0,1fr) 42px;gap:10px;align-items:center;font-size:14px}
+.spin{display:inline-block;width:16px;height:16px;border:2.5px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:s 0.8s linear infinite;vertical-align:-3px}
+@keyframes s{to{transform:rotate(360deg)}}
+footer{max-width:1080px;margin:0 auto;padding:0 max(4vw,16px) 30px;font-size:13px;color:var(--mute)}
+@media(max-width:760px){.grid2,.hero{grid-template-columns:minmax(0,1fr)}.skill{grid-template-columns:86px minmax(0,1fr) 40px}.hr{grid-template-columns:110px minmax(0,1fr) 36px}}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute)}.stack td:empty{display:none}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;font-size:15px;transition:.2s;z-index:8}
+.toast.on{opacity:1;transform:translate(-50%,0)}.toast.ok{background:var(--ok);color:#fff}.toast.no{background:var(--mid);color:#fff}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<header class="top">
+  <div class="toprow">
+    <div class="brand">Communication Skills Assessment<small id="sub">Practice edition · Versant-style English Placement Test</small></div>
+    <div class="clock" id="clock"><svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="4"/><circle id="ringc" cx="18" cy="18" r="15" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="0" transform="rotate(-90 18 18)"/></svg><span id="clockt">0:00</span></div>
+    <button class="endbtn" id="endbtn" type="button">End test</button>
+  </div>
+  <div class="strip" id="strip"></div>
+</header>
+<main id="stage"></main>
+<footer>A practice tool built on the parts, timings and tips in your Deloitte VEPT guide. All questions here are original practice items, not real test content. Scores are estimates, not official Pearson results.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal" id="modal"><div class="card"><h2>End the test now?</h2><p class="mute">The parts you have finished will be graded. Anything you haven't answered yet will count as no response.</p><div class="row"><button class="btn" id="mYes" type="button">End and see results</button><button class="btn ghost" id="mNo" type="button">Keep going</button></div></div></div>
+<script>
+const BANK = {
+A: [
+"Coffee is one of the most popular drinks in the world. It is grown in more than fifty countries, mostly in warm regions near the equator. The beans are picked by hand, dried in the sun, and then roasted. Some people drink it black, while others add milk and sugar. For many workers, the day does not really start until they have had their first cup.",
+"Libraries have changed a great deal in recent years. In the past, they were quiet places full of printed books. Today, many libraries also offer computers, free internet, and spaces where people can meet and work together. Some even lend out tools, musical instruments, and cameras. Although the way people use them has changed, libraries still help communities learn and share knowledge.",
+"Bamboo is a remarkable plant. Some types can grow almost a meter in a single day, making it one of the fastest growing plants on Earth. It is strong, light, and flexible, so people use it to build houses, furniture, and even bicycles. Because it grows back quickly after being cut, many people see bamboo as an environmentally friendly material.",
+"Working from home has become common for many office employees. It saves time that would otherwise be spent travelling, and it allows people to organize their day more freely. However, it also has disadvantages. Some workers feel lonely without their colleagues, and others find it hard to separate work from family life. Many companies now offer a mix of office days and home days.",
+"The Great Wall of China is not a single wall but a series of walls built over many centuries. Different dynasties added new sections to protect their land from invaders. Today, the wall stretches for thousands of kilometers across mountains, deserts, and grasslands. Millions of tourists visit it every year, and some parts have been carefully restored.",
+"Sleep is essential for good health. While we sleep, the body repairs itself and the brain stores memories from the day. Most adults need between seven and nine hours each night. People who regularly sleep less may find it harder to concentrate and are more likely to become ill. Simple habits, such as going to bed at the same time each night, can improve sleep quality.",
+"Honeybees live in large groups called colonies. Each colony has one queen, thousands of female workers, and a smaller number of males. The workers collect nectar from flowers and turn it into honey, which the colony eats during the winter. As they move from flower to flower, bees also carry pollen, helping many fruits and vegetables to grow.",
+"The first passenger railways were built in England in the early nineteenth century. At that time, many people believed that travelling at high speed would be harmful to the human body. They were soon proved wrong. Within a few decades, railways had spread across Europe and North America, changing the way people lived, worked, and traded goods.",
+"Volunteering is a good way to help others and to learn new skills. Volunteers work in schools, hospitals, animal shelters, and many other places. Some give a few hours each month, while others travel abroad for longer projects. Many volunteers say that the experience improved their confidence and helped them make new friends. Employers also value volunteer work on a resume.",
+"The ocean covers more than seventy percent of the Earth's surface, yet much of it remains unexplored. Deep below the surface, there is no sunlight and the water is extremely cold. Even so, scientists have discovered strange creatures living there, including fish that produce their own light. New technology is helping researchers study these areas for the first time.",
+"Good teamwork depends on clear communication. When team members share information openly, problems are noticed early and solved quickly. Each person should understand their role and what others expect from them. Regular short meetings can help everyone stay informed. It is also important to listen carefully and respect different opinions, even when people disagree.",
+"Mount Everest is the highest mountain in the world, rising nearly nine thousand meters above sea level. It lies on the border between Nepal and China. Climbing it is extremely dangerous because of the thin air, freezing temperatures, and sudden storms. Despite the risks, hundreds of climbers attempt to reach the summit every year, usually in the spring.",
+"Cooking at home can be healthier and cheaper than eating out. When you prepare your own meals, you can choose fresh ingredients and control how much salt, sugar, and oil you use. Planning meals for the week also reduces food waste. Many people find that cooking is a relaxing activity after a busy day, especially when they share the meal with family or friends.",
+"Penguins are birds, but they cannot fly. Instead, their wings have developed into strong flippers that make them excellent swimmers. Most penguins live in the cold waters of the Southern Hemisphere, and some species spend months on the ice of Antarctica. They have thick layers of fat and tightly packed feathers that keep them warm in freezing temperatures.",
+"Smartphones have changed how people communicate. With a single device, we can make calls, send messages, take photos, and search for information in seconds. However, many experts warn that spending too much time on our phones can affect sleep and concentration. Some people now set daily limits or keep their phones out of the bedroom at night.",
+"The bicycle was invented in Europe in the nineteenth century. Early versions had no pedals, and riders pushed themselves along with their feet. Later models added pedals and chains, which made cycling faster and easier. Today, bicycles are used around the world for transport, sport, and fun, and many cities are building special lanes to encourage more people to ride."
+],
+B1: ["She's waiting outside.","Please close the door.","The bus is late again.","I need a new phone.","We'll meet at noon.","He forgot his keys.","Turn left at the bank.","The shop opens at nine.","Can you help me?","It's raining heavily today.","My sister lives nearby.","Lunch is ready now.","They won the match.","I don't like coffee.","Where is the station?","The room is too cold.","Call me after work.","She reads every night.","That's a good idea.","The printer isn't working.","We should leave soon.","His car is blue.","I'm almost finished.","Put it on the table.","The meeting was short."],
+B2: ["Could you send me the report by Friday?","I usually take the train to the office.","She asked whether the restaurant was open.","We need to book the hotel before prices rise.","The new manager starts on Monday morning.","Don't forget to bring your identity card.","He's been working here for almost three years.","The flight was delayed because of the storm.","Let's discuss the budget at the next meeting.","I couldn't find the file on the shared drive.","They moved to a bigger apartment last month.","Please check your email for the updated schedule.","Most of the guests arrived after eight o'clock.","You should save your work before closing the window.","The library is closed on public holidays.","She'll call the client as soon as she lands.","My laptop battery doesn't last very long.","We ordered lunch from the place across the street.","The training session has been moved to Thursday.","It's easier to learn when you practice every day.","He apologized for missing the deadline.","I'd rather walk than wait for a taxi.","Our team presented the results to the director.","The parking area behind the building is full.","Can you remind me what time the call starts?"],
+B3: ["If the shipment arrives late, we'll have to reschedule the product launch.","Although the instructions were clear, several people still made the same mistake.","The committee hasn't decided whether to approve the proposal or reject it.","She suggested that we review the contract carefully before signing anything.","Most employees prefer flexible hours to a higher salary, according to the survey.","The engineer explained why the system had crashed during the busiest hour.","Unless we reduce our expenses, the project won't be finished within budget.","By the time we reached the airport, the boarding gate had already closed.","Researchers found that people remember stories better than lists of facts.","The museum's new exhibition attracted far more visitors than anyone expected.","He would have joined the team earlier if he had known about the opening.","Customers who register online receive a discount on their first purchase.","The quarterly figures suggest that demand will continue to grow next year.","It's important to back up your data regularly in case something goes wrong.","The manager insisted that every report be checked by two different people.","Several departments are sharing the conference room until the renovation is complete.","The city council announced plans to build a new bridge across the river.","What surprised me most was how quickly the team adapted to the changes.","Before you submit the application, make sure every section has been completed.","Neither the supervisor nor the staff were informed about the policy change.","Thanks to the new software, processing an order now takes half the time.","The interviewer asked her to describe a situation in which she had failed.","Despite the heavy traffic, the delivery driver managed to arrive on schedule.","Having worked abroad for years, he found it difficult to adjust to life at home.","The audit revealed several errors that had gone unnoticed for months."],
+C: [["the meeting","was postponed","until next week"],["she left","her umbrella","on the train"],["could you","pass me","the salt"],["my brother","works","at a hospital"],["we arrived","at the hotel","after midnight"],["the children","were playing","in the garden"],["he asked me","to check","the figures"],["the new office","is close to","the station"],["they decided","to cancel","the trip"],["I have never","seen","such a big crowd"],["please","send the invoice","to the client"],["the price","of petrol","went up again"],["our manager","approved","the holiday request"],["the students","handed in","their assignments"],["she spends","most weekends","with her parents"],["the train","to Mumbai","leaves at six"],["he forgot","to lock","the front door"],["we should","finish the report","before lunch"],["the doctor","told him","to rest"],["do you know","where","the keys are"],["the weather","was perfect","for a picnic"],["my neighbor","bought","a new car"],["the waiter","brought us","the wrong order"],["I usually","go jogging","in the morning"],["the company","hired","twenty new staff"],["she explained","the problem","to the team"],["the box","was too heavy","to carry"],["they are planning","a party","for her birthday"],["he spoke","very quietly","during the call"],["we waited","for the bus","in the rain"],["the results","will be announced","on Friday"],["his phone","rang","in the middle of the meeting"],["the teacher","gave us","extra homework"],["have you seen","my blue jacket","anywhere"],["the store","is offering","a big discount"],["she was promoted","to team leader","last year"],["the guests","enjoyed","the dinner"],["I am looking forward","to meeting","your family"],["the printer","on the second floor","is broken"],["they walked","along the beach","at sunset"],["he finally","found","his missing wallet"],["the new policy","applies to","all employees"],["could you","tell me","the way to the bank"],["the movie","was much longer","than we expected"],["we need","more volunteers","for the event"]],
+D: [
+{l:["Are you coming to the team lunch today?","I can't. I have a doctor's appointment at one.","Oh, I hope everything's okay."],q:"Why can't the second speaker go to lunch?",a:"She has a doctor's appointment.",k:["doctor","appointment"]},
+{l:["Excuse me, is this seat taken?","No, go ahead. My friend just got off.","Thanks. The train is really crowded today."],q:"Where are the speakers?",a:"On a train.",k:["train"]},
+{l:["I've lost my ID card again.","You should ask security for a temporary one.","Good idea. I'll go there now."],q:"Where will the first speaker go?",a:"To security.",k:["security"]},
+{l:["Did you finish the presentation?","Almost. I just need to add the charts.","Great. The client meeting is at three."],q:"What does the presentation still need?",a:"The charts.",k:["chart","graph"]},
+{l:["How was your holiday in Goa?","Wonderful, but it rained for two days.","At least you got some rest."],q:"What was the problem with the weather?",a:"It rained for two days.",k:["rain"]},
+{l:["Can I pay by card?","Sorry, our machine is broken. Cash only today.","No problem. There's an ATM next door."],q:"How will the customer pay?",a:"In cash.",k:["cash","atm"]},
+{l:["Why are you working so late?","The deadline for the audit moved to tomorrow.","That's tough. Do you need any help?"],q:"Why is the person working late?",a:"The audit deadline moved to tomorrow.",k:["deadline","tomorrow","audit"]},
+{l:["The printer's out of paper again.","There's a new box in the supply room.","Thanks. I'll grab some."],q:"Where is the paper?",a:"In the supply room.",k:["supply","store room","storeroom"]},
+{l:["I'm thinking of buying a bicycle.","Good idea. You could ride it to work.","Exactly, and I'd save money on petrol."],q:"Why does the first speaker want a bicycle?",a:"To ride to work and save on petrol.",k:["work","petrol","fuel","money","save"]},
+{l:["I'm afraid your flight has been cancelled.","Cancelled? Is there another one today?","Yes, there's one at nine this evening."],q:"When is the next flight?",a:"At nine this evening.",k:["nine","9"]},
+{l:["Is the conference room free at two?","No, the finance team booked it.","Then let's use my office instead."],q:"Where will they meet?",a:"In the first speaker's office.",k:["office"]},
+{l:["Congratulations on your promotion!","Thank you! I'm a little nervous, though.","You'll be great. You've earned it."],q:"How does the second speaker feel?",a:"Nervous.",k:["nervous","anxious","worried","scared"]},
+{l:["Have you tried the new café downstairs?","Yes. The coffee is good, but it's expensive.","Then I'll keep bringing my own."],q:"What is the problem with the café?",a:"It's expensive.",k:["expensive","price","cost","costly"]},
+{l:["Could you speak a little louder?","Sorry, is that better?","Yes, much better. The line was bad."],q:"What was the problem?",a:"The phone line was bad, so it was hard to hear.",k:["line","hear","loud","quiet","connection"]},
+{l:["I'm going to the post office.","Could you mail this letter for me?","Sure, give it here."],q:"What does the second speaker want?",a:"For the first speaker to mail a letter.",k:["letter","mail","post"]},
+{l:["My laptop keeps shutting down.","Have you called the IT helpdesk?","Not yet. I'll do it now."],q:"What will the first speaker do?",a:"Call the IT helpdesk.",k:["helpdesk","help desk","support","call"]},
+{l:["We're out of milk.","I'll pick some up on my way home.","Thanks. Get some bread too, please."],q:"What else should the second speaker buy?",a:"Bread.",k:["bread"]},
+{l:["How long does the drive take?","About two hours without traffic.","Then we should leave early."],q:"How long is the drive?",a:"About two hours.",k:["two hours","2 hours"]},
+{l:["Did you hear Priya is leaving the company?","Really? Where is she going?","She got a job in Singapore."],q:"Where is Priya going?",a:"To Singapore.",k:["singapore"]},
+{l:["Excuse me, this soup is cold.","I'm so sorry. I'll bring you a fresh bowl.","Thank you."],q:"Who is the second speaker?",a:"A waiter.",k:["waiter","waitress","server","staff","restaurant"]},
+{l:["Are you free on Saturday?","No, I'm helping my cousin move house.","Maybe Sunday, then?"],q:"What is the second speaker doing on Saturday?",a:"Helping a cousin move house.",k:["move","moving","cousin","shift"]},
+{l:["The lift is out of order.","Again? My office is on the ninth floor.","You'd better take the stairs."],q:"How will the second speaker get to the office?",a:"By taking the stairs.",k:["stair","walk","climb"]},
+{l:["I forgot my wallet at home.","Don't worry, I'll pay for lunch.","Thanks. I'll pay you back tomorrow."],q:"When will the first speaker pay the money back?",a:"Tomorrow.",k:["tomorrow"]},
+{l:["The client wants to move the meeting to Tuesday.","Tuesday doesn't work for me. How about Wednesday?","I'll ask them."],q:"Which day does the second speaker suggest?",a:"Wednesday.",k:["wednesday"]},
+{l:["Why is the road closed?","There was an accident near the bridge.","Let's take the other route, then."],q:"Why is the road closed?",a:"There was an accident.",k:["accident","crash"]},
+{l:["Would you like tea or coffee?","Just water, please. I've had three coffees already.","Fair enough."],q:"What does the second speaker want to drink?",a:"Water.",k:["water"]},
+{l:["My phone screen cracked.","You can get it fixed at the mall.","Do you know how much it costs?"],q:"Where can the phone be repaired?",a:"At the mall.",k:["mall"]},
+{l:["Sorry I'm late. The metro stopped for twenty minutes.","That's all right. We just started.","What did I miss?"],q:"Why was the first speaker late?",a:"The metro stopped for twenty minutes.",k:["metro","train","subway"]},
+{l:["Have you booked the concert tickets?","Not yet. The website keeps crashing.","Try again tonight."],q:"Why haven't the tickets been booked?",a:"The website keeps crashing.",k:["website","site","crash","online"]},
+{l:["This report has a lot of errors.","Sorry, I wrote it in a hurry.","Please check it again before Friday."],q:"Why does the report have errors?",a:"It was written in a hurry.",k:["hurry","rush","quick","fast"]},
+{l:["Is it going to rain today?","The forecast says it'll be sunny all day.","Great. I'll leave my umbrella at home."],q:"What will the weather be like?",a:"Sunny.",k:["sun"]},
+{l:["Can I borrow your charger?","Sure, but I need it back by four.","No problem."],q:"When does the second speaker need the charger back?",a:"By four o'clock.",k:["four","4"]},
+{l:["Our new colleague starts tomorrow.","Should we organize a welcome lunch?","That's a lovely idea."],q:"What do they plan for the new colleague?",a:"A welcome lunch.",k:["lunch"]},
+{l:["Why are you wearing a suit today?","I have a job interview this afternoon.","Good luck!"],q:"Why is the second speaker wearing a suit?",a:"He has a job interview.",k:["interview"]},
+{l:["I'm sorry, the hotel is fully booked.","Is there anything else nearby?","There's a guest house down the road."],q:"Where might the guest stay?",a:"At a guest house down the road.",k:["guest house","guesthouse"]},
+{l:["I'd like to return this shirt.","Is there a problem with it?","It's too small."],q:"Why is the shirt being returned?",a:"It's too small.",k:["small","size","tight","fit"]},
+{l:["Did you call the plumber?","Yes, he's coming on Thursday morning.","Good. The kitchen tap is still leaking."],q:"What is wrong in the kitchen?",a:"The tap is leaking.",k:["tap","leak","faucet"]},
+{l:["How did your exam go?","Better than I expected.","I told you all that studying would pay off."],q:"How did the exam go?",a:"Better than expected.",k:["better","well","good","expected"]},
+{l:["Shall we take a taxi?","Let's walk. It's only ten minutes.","All right. The weather's nice anyway."],q:"How will the speakers travel?",a:"They will walk.",k:["walk","foot"]},
+{l:["The report is due today, isn't it?","No, the manager gave us until Monday.","What a relief."],q:"When is the report due?",a:"On Monday.",k:["monday"]}
+],
+E: [
+"Many people feel nervous before a job interview. One way to feel more confident is to prepare carefully. Read about the company, and think about how your skills match the role. Practice answering common questions with a friend. On the day of the interview, arrive a few minutes early and bring a copy of your resume. Remember to listen carefully, speak clearly, and ask one or two questions at the end. Even if you don't get the job, every interview is a chance to learn.",
+"Recycling helps reduce the amount of waste that goes to landfills. Paper, glass, plastic, and metal can often be processed and used again. To recycle properly, it is important to rinse containers and separate materials into the correct bins. Some cities collect recycling from homes every week, while others have central drop-off points. Small actions, such as carrying a reusable bag or bottle, can also make a big difference over time.",
+"Time management is a valuable skill at work and at school. Start each day by making a short list of tasks and putting them in order of importance. Try to complete the hardest task first, when your energy is highest. Avoid checking your email every few minutes, because constant interruptions slow you down. Finally, take short breaks during the day. Resting your mind for a few minutes can help you work more effectively afterwards.",
+"Learning a new language takes patience and regular practice. It is better to study for twenty minutes every day than for three hours once a week. Listening to music, watching films, and reading simple stories can make learning more enjoyable. Don't be afraid of making mistakes when you speak. Most people are happy to help a learner, and every conversation will improve your confidence and your vocabulary.",
+"Customer service is an important part of any business. When customers have a problem, they want to feel that someone is listening. A good service agent stays calm, asks clear questions, and explains the next steps. Even when a problem cannot be solved immediately, a polite and honest reply can keep a customer loyal. Companies that train their staff well often receive better reviews and more repeat business.",
+"Exercise does not have to be difficult or expensive. Walking for thirty minutes a day can improve your heart health and your mood. You can take the stairs instead of the lift, or get off the bus one stop early. Many people enjoy exercising with friends because it makes them more likely to continue. The most important thing is to choose an activity you enjoy and to do it regularly.",
+"Before you send an important email, read it again carefully. Check that the subject line clearly explains what the message is about. Make sure you have used the correct names and attached any files you mentioned. Keep your sentences short and polite, and avoid writing in capital letters. If the message is urgent, say so at the beginning. A clear, well-written email saves time for both you and the reader.",
+"Public transport is an important part of life in large cities. Buses, trains, and metros carry millions of passengers every day. They help reduce traffic and air pollution, and they are usually cheaper than driving. However, they can be crowded during rush hour. Many cities are now investing in new lines and electric buses to make their transport systems faster, cleaner, and more comfortable.",
+"Reading regularly has many benefits. It can improve your vocabulary, your writing, and your ability to concentrate. Fiction allows readers to imagine other lives and understand different points of view, while non-fiction helps them learn new facts and ideas. Even fifteen minutes of reading before bed can be relaxing. Many people find that joining a book club helps them read more and discover new authors.",
+"Saving money can be easier with a simple plan. First, write down how much you earn and spend each month. Then decide on a realistic amount to save, even if it is small. Some people move their savings to a separate account as soon as they are paid, so they are not tempted to spend it. Over time, these small amounts can grow into a useful emergency fund."
+],
+F: [
+["I left my umbrella at home, so I got completely ___ in the rain.","wet|soaked|drenched"],
+["The shop was ___, so we couldn't buy anything.","closed|shut"],
+["He is very ___; he always arrives before everyone else.","punctual|early"],
+["Please turn off the lights when you ___ the room.","leave|exit"],
+["She speaks three ___: English, Hindi and French.","languages"],
+["We ___ dinner at a small Italian restaurant last night.","had|ate|enjoyed"],
+["The tea is too ___ to drink, so let it cool down.","hot"],
+["My phone battery is almost ___, so I need to charge it.","dead|empty|flat|finished|gone|drained|out"],
+["I can't read the sign; the letters are too ___.","small|tiny|faded|blurry"],
+["The meeting has been ___ until next week because the manager is sick.","postponed|delayed|moved|rescheduled|pushed|deferred"],
+["If you don't understand the question, you can ___ the teacher for help.","ask"],
+["The train was so ___ that we had to stand all the way.","crowded|full|packed|busy"],
+["She wore a heavy coat because it was ___ outside.","cold|freezing|chilly|snowing"],
+["He couldn't open the door because he had ___ his keys.","lost|forgotten|misplaced"],
+["Our flight was ___ for three hours due to bad weather.","delayed|held"],
+["The doctor told him to ___ smoking for his health.","stop|quit"],
+["I need to ___ some money from the ATM before we go shopping.","withdraw|take|get"],
+["Please ___ your seatbelt before the car starts moving.","fasten|wear|buckle|put on"],
+["The movie was so ___ that I fell asleep halfway through.","boring|dull|long|slow"],
+["We need to ___ a table at the restaurant for Saturday night.","book|reserve"],
+["He apologized for the ___ and promised to be on time tomorrow.","delay|lateness"],
+["The children were ___ in the park until it got dark.","playing"],
+["She ___ her keys on the kitchen table and went upstairs.","left|put|placed|dropped|threw|kept"],
+["I can't hear you; could you speak a little ___?","louder|up|slower|more loudly"],
+["The price of vegetables has ___ a lot this year.","increased|risen|changed|dropped|fallen|decreased|climbed|jumped|soared|gone up|risen up"],
+["My manager asked me to ___ the report before sending it to the client.","check|review|proofread|edit|read|revise|finish|correct|sign|verify|complete"],
+["You should drink plenty of ___ when the weather is hot.","water|fluids|liquids"],
+["The bridge was ___ for repairs, so we took a different road.","closed|shut"],
+["I'd like to ___ this shirt for a bigger size.","exchange|swap|change|trade"],
+["She is ___ to peanuts, so she never eats them.","allergic"],
+["Remember to ___ the document before you close the program.","save"],
+["There's no milk left; we need to ___ some more.","buy|get"],
+["The company ___ fifty new graduates this year.","hired|recruited|employed|selected|took on"],
+["He has a ___ throat, so he can't sing tonight.","sore"],
+["We were ___ to hear that the project had been approved.","happy|glad|pleased|delighted|relieved|excited|thrilled|surprised"],
+["The museum is ___ on Mondays, so let's visit on Tuesday.","closed|shut"],
+["Could you ___ me your pen for a moment?","lend|give|pass|hand"],
+["I always ___ my teeth before going to bed.","brush|clean"],
+["This road is very ___, so drive carefully.","dangerous|busy|narrow|slippery|steep|icy|wet|bumpy|risky"],
+["She took a ___ off work to look after her sick mother.","day|week|month|break"],
+["The instructions were so ___ that nobody understood them.","confusing|complicated|unclear|vague|complex|difficult"],
+["After walking for hours, we were very ___ and hungry.","tired|exhausted|thirsty"],
+["He ___ the bus by one minute and had to wait for the next one.","missed"],
+["Entry to the zoo is ___ for children under five, so they don't need a ticket.","free"],
+["Please ___ quiet during the exam.","stay|be|remain|keep"],
+["She has worked here ___ 2019.","since"],
+["They have lived in this city ___ ten years.","for"],
+["I'm not good ___ mathematics, but I enjoy history.","at|in|with"],
+["The keys are ___ the drawer next to the sink.","in|inside"],
+["He is interested ___ learning Japanese.","in"],
+["We arrived late ___ of the heavy traffic.","because"],
+["___ it was raining, we went for a walk.","although|though"],
+["She didn't go to the party ___ she was feeling ill.","because|since|as"],
+["You can have tea ___ coffee, but not both.","or"],
+["He ran fast, ___ he still missed the train.","but|yet"],
+["This is the ___ book I have ever read; I loved every page.","best|greatest|finest"],
+["My brother is two years ___ than me.","older|younger"],
+["If it ___ tomorrow, we will stay at home.","rains|snows|storms|pours"],
+["I ___ never been to Japan, but I would like to go.","have"],
+["By the time we arrived, the film had already ___.","started|begun|finished|ended"],
+["She asked me ___ I wanted to join them for dinner.","if|whether"],
+["The report ___ written by the finance team last week.","was"],
+["Neither John ___ Mary attended the meeting.","nor"],
+["He drives very ___, so he has never had an accident.","carefully|safely|slowly|cautiously"],
+["Could you tell me ___ the nearest bank is?","where"],
+["The customer was ___ with the service and left a good review.","happy|satisfied|pleased|impressed|delighted"],
+["The project was a ___; it finished early and under budget.","success"],
+["Employees must ___ their ID cards at all times inside the building.","wear|carry|display"],
+["The weather ___ says it will be sunny this weekend.","forecast|report|app|channel"],
+["I'm sorry, but the manager is not ___ right now. Can I take a message?","available|here|in|free"],
+["Please ___ the form and return it to reception.","complete|fill|sign|submit|fill out|fill in"],
+["He ___ his leg while playing football and couldn't walk.","broke|injured|hurt|twisted|sprained|fractured"],
+["The store offers a ten percent ___ to students.","discount"],
+["She is saving money because she wants to ___ a car.","buy|purchase"],
+["The guests will ___ at seven, so dinner must be ready by then.","arrive|come"],
+["The suspect ___ any involvement in the crime.","denied"],
+["We should ___ the problem before it gets worse.","solve|fix|address|resolve|handle|tackle|discuss"],
+["The baby is ___, so please speak quietly.","sleeping|asleep|napping|resting"],
+["Turn ___ the television; nobody is watching it.","off"],
+["The train ___ from platform four in ten minutes.","departs|leaves|goes"],
+["He couldn't ___ the meeting because he was travelling.","attend|join"],
+["Her speech was so ___ that everyone stood up and clapped.","inspiring|good|moving|powerful|great|amazing|wonderful|excellent|impressive|brilliant|motivating"],
+["I need a pair of ___ to cut this paper.","scissors"],
+["The lecture was cancelled, so the students had the afternoon ___.","free|off"],
+["It was such a ___ day that we decided to go to the beach.","sunny|hot|beautiful|lovely|nice|warm|fine|great|good|perfect"],
+["Can you ___ me when the delivery arrives? I'll be upstairs.","tell|call|inform|notify|let|text|message|ping|alert"],
+["He spent all his money, so now he can't ___ a new phone.","afford|buy|get|purchase"],
+["The hotel ___ was very helpful and gave us a map of the city.","staff|receptionist|manager|employee|clerk"],
+["I prefer tea ___ coffee.","to|over"],
+["The patient was ___ from hospital after three days.","discharged|released"],
+["We had to ___ the picnic because of the storm.","cancel|postpone|stop|abandon"]
+],
+G: ["I'll see you outside the cinema at seven.","How much does a ticket to Delhi cost?","She hasn't replied to my message yet.","Please leave the files on my desk.","The office will be closed on Monday.","Could you pick up the children after school?","We're planning a trip to the mountains next month.","He always drinks two cups of coffee in the morning.","Don't forget to switch off your computer.","The new software is much faster than the old one.","Why didn't you tell me about the meeting?","My parents are visiting us this weekend.","It's the first time I've ever flown alone.","The bakery on the corner sells fresh bread.","I can't believe how quickly the year has passed.","She works as a nurse at the city hospital.","They've already sold all the tickets for tonight.","The children were excited about the school trip.","Can you recommend a good place to eat nearby?","Our team will present the results on Thursday.","He's looking for a cheaper apartment near the office.","The museum offers free entry on Sundays.","I'd like to change my seat, please.","You'll need a passport to open a bank account.","What time does the next bus leave?","The report must be submitted before the end of the month.","She apologized to her colleagues for the confusion.","We should check the weather before we leave.","The lecture was interesting but a little too long.","Most of the staff work from home on Fridays.","I've been waiting here for almost an hour.","Could you explain the last part again?","The restaurant was full, so we went somewhere else.","He bought his mother flowers for her birthday.","The package should arrive within three working days.","Is there a pharmacy open at this time of night?","Her presentation impressed everyone in the room.","The heavy rain caused delays across the city.","Let me know if you need any help with the project.","We moved into our new house last summer.","The manager wants to speak to you after lunch.","It's important to drink water throughout the day.","I usually go to the gym three times a week.","Have you finished reading the book I lent you?","The company is opening a new branch in Pune.","Their wedding will take place in December.","The printer on the third floor is out of ink.","Remember to bring a pen and a notebook.","He's afraid of flying, so he travels by train.","We were surprised by how friendly everyone was.","The shop doesn't accept credit cards.","She's studying to become an accountant.","There's a problem with the internet connection.","The guests enjoyed the music and the food.","I'm afraid the doctor is busy right now.","They decided to postpone the launch until spring.","Please make sure all the windows are closed.","My flight was cancelled because of the fog.","The new policy will affect every department.","How long have you been learning English?","The hotel room had a beautiful view of the sea.","You can't park your car in front of the gate.","We need to finish this task before the deadline.","He forgot to attach the file to his email.","The kids spent the whole afternoon at the beach.","Are you coming to the office party on Friday?","The train was crowded, so I stood near the door.","She'll be back from her holiday next Tuesday.","Our neighbors are very friendly and helpful.","The test results will be sent to you by email."],
+H: [
+{t:"Meera took the early train to the city for a job interview. Halfway through the journey, the train stopped because of a signal problem. Worried about being late, she called the company and explained the situation. The interviewer thanked her for calling and moved her appointment to the afternoon. Meera arrived on time and felt relaxed during the interview.",k:["train","interview","stop|signal|delay|problem","call|phone|rang|contact","afternoon|later|moved|reschedul|changed","on time|relax|calm|arrived"]},
+{t:"Tom bought a new laptop online. When the package arrived, he found that the screen was cracked. He took photos of the damage and emailed the store. The next day, the store apologized and sent a courier to collect the broken laptop. A week later, Tom received a new one at no extra cost.",k:["laptop|computer","online|internet","crack|broken|damage","photo|picture","email|contact|wrote|complain","courier|collect|pick","new|replace","free|no extra|no cost|no charge"]},
+{t:"Anita wanted to learn to swim, but she was afraid of deep water. She joined a beginner class at the local pool. Her instructor started with simple exercises in the shallow end. After a few weeks, Anita felt more confident. By the end of the course, she could swim across the whole pool without stopping.",k:["swim","afraid|scared|fear","deep","class|course|lesson","instructor|teacher|coach","shallow|simple|easy","confident|confidence","across|whole pool|without stopping"]},
+{t:"A small café near the office started offering free coffee to customers who brought their own cups. The owner wanted to reduce the number of paper cups thrown away each day. At first, only a few people took part. Within two months, however, more than half of the customers were bringing reusable cups.",k:["caf|coffee shop","free coffee|free","own cup|their cup|reusable|bring","reduce|waste|paper cup|thrown","few|at first","two months|half|more than half"]},
+{t:"Last Saturday, Raj planned a picnic with his friends at the lake. When they arrived, it started to rain heavily. Instead of going home, they found a covered shelter nearby. They ate their sandwiches there, played cards, and watched the rain. Everyone agreed it was one of their best days out.",k:["picnic","friend","lake","rain","shelter|covered|roof","sandwich|ate|food","card","best|great|enjoy|fun"]},
+{t:"Sara noticed that her team often missed deadlines because nobody knew who was responsible for each task. She created a shared online list that showed every task, its owner, and its due date. She also started a short meeting every Monday. After a month, the team was finishing most projects on time.",k:["team","deadline|late","responsib|who|owner","list|tracker|sheet|document","due date|date","meeting","monday|week","on time|month"]},
+{t:"An elderly man lost his dog in a busy park. A young girl saw him searching and offered to help. She remembered seeing a dog near the playground and led him there. The dog was sitting under a bench. The man was so grateful that he gave the girl a small reward, but she politely refused it.",k:["old|elderly","dog","park","girl","help","playground","bench","reward|money|gift","refus|declin|did not accept|didn't accept|didn't take|did not take"]},
+{t:"Priya's flight to London was cancelled because of a snowstorm. The airline offered her a hotel room and a seat on the next morning's flight. Although she was disappointed, she used the extra evening to finish a report for work. She arrived in London a day late but had completed all her work.",k:["flight","london","cancel","snow|storm|weather","hotel","next|morning","disappoint|sad|upset","report|work","day late|late"]},
+{t:"A local library noticed that fewer teenagers were visiting. To change this, it opened a gaming room and started a weekly book club about popular novels. The library also asked teenagers for ideas about new activities. Within a year, the number of young visitors had doubled.",k:["library","teen|young","fewer|less|decreas","gam","book club|club","novel|book","idea|asked|suggest","doubl|year|increas"]},
+{t:"David was cooking dinner when the power went off in his building. He couldn't use the electric stove, so he called a nearby restaurant to order food. While he waited, he lit candles and set the table. When the food arrived, the power came back on, and his family laughed about the timing.",k:["cook|dinner","power|electric|light","stove|cooker","restaurant|order","candle","table","came back|returned|back on","laugh|funny"]},
+{t:"Lena started a small online business selling handmade candles. At first, she only sold a few each week to friends. She then began posting short videos showing how the candles were made. The videos became popular, and orders increased quickly. Lena had to hire two people to help her keep up with demand.",k:["business|shop|company","candle","handmade|hand","friend|few","video","popular|viral","order|sales|increas","hire|two people|employ|help"]},
+{t:"During a busy shift, a nurse noticed that a patient's medicine label had the wrong name on it. She stopped the medicine from being given and reported the error to the doctor. The pharmacy corrected the label immediately. The hospital later thanked her and used the case to improve its checking process.",k:["nurse","patient","medicine|medication|drug","label|name","wrong|error|mistake","stop|prevent","doctor|report","pharmac|correct","thank|improv|process"]},
+{t:"Jack forgot his best friend's birthday because he had been very busy at work. He felt terrible when he realized his mistake the next day. To make up for it, he planned a surprise dinner with their old school friends. His friend was so happy with the surprise that he forgot all about the missed birthday.",k:["forgot|forget|missed","birthday","busy|work","terrible|bad|sorry|guilty","surprise","dinner|party","school friend|old friend|friends","happy|glad|forgot"]},
+{t:"A company decided to let its employees work from home two days a week. Managers were worried that productivity would fall. However, after six months, the company found that employees were completing more work and taking fewer sick days. Because of these results, the company made the policy permanent.",k:["company|firm","home|remote","two days|2 days","manager|worr|concern","productiv|less work","six months|6 months","more work|complet","sick|leave","permanent|kept|continue"]},
+{t:"Maria found a wallet on the bus on her way to work. Inside there was some money and an ID card, but no phone number. She took the wallet to the police station during her lunch break. That evening, the owner called her to say thank you and invited her to dinner.",k:["wallet|purse","bus","money|cash","id|identity|card","phone number|number|contact","police","lunch","owner","thank|dinner"]},
+{t:"Kiran wanted to run a marathon, but he had never run more than five kilometers. He followed a training plan for six months, slowly increasing the distance each week. He also changed his diet and slept more. On race day, he finished the marathon in just under five hours and felt very proud.",k:["marathon|race","five kilometers|5 km|5 kilometers|five km|short","train|plan|practice","six months|6 months|month","distance|increas|gradual|slowly","diet|food|eat","sleep|slept|rest","finish|complet|five hours|5 hours","proud|happy"]},
+{t:"A school in a small village had no computers. A group of former students raised money online to buy laptops for the classrooms. They also volunteered to teach basic computer skills on weekends. Within a year, students were using the laptops for research and homework.",k:["school","village","no computer|computer","former|old students|alumni","raise|money|fund|donat","laptop","teach|volunteer|class","weekend","research|homework|year"]},
+{t:"Neha was asked to give a presentation to senior managers for the first time. She was very nervous, so she practiced in front of her family every evening. On the day, a technical problem stopped her slides from working. She stayed calm, explained her ideas without slides, and received excellent feedback.",k:["presentation|present","senior|manager|boss","first time","nervous|anxious|scared","practi|rehears","family","technical|problem|slides|projector","calm","feedback|praise|well|good"]}
+],
+I: [
+{title:"Working from home",t:"For decades, most office workers have spent hours every week travelling to and from work. Now that technology allows many jobs to be done from anywhere, companies should let employees work from home whenever their role allows it.\n\nThe most obvious benefit is time. An employee who no longer commutes for an hour each way gains ten hours a week, which can be spent resting, exercising, or with family. Rested employees tend to be more focused and make fewer mistakes.\n\nRemote work also helps employers. A company that does not require people to live near its office can hire talented workers from other cities or even other countries, and it can save money on office space.\n\nCritics argue that working from home makes people lonely and weakens teamwork. This is a real concern, but it can be managed. Teams can meet in person once or twice a month, and video calls can keep colleagues connected. In my view, the advantages of remote work clearly outweigh the disadvantages, and companies that refuse to offer it will find it harder to attract the best people.",k:["remote|home","time|commut|travel","focus|rest|mistake|productiv","hire|talent|other cities|countries|recruit","money|cost|office space|save","lonely|teamwork|isolat","meet|video|manag"]},
+{title:"Teenagers and social media",t:"Many parents and teachers believe that teenagers should be banned from using social media until they are older. I understand their worries, but a ban is not the answer. Social media is now part of how young people communicate, learn about the world, and even find jobs later in life. Banning it would only push teenagers to use it secretly, without any guidance.\n\nA better approach is for schools to teach students how to use social media responsibly. Students should learn how to protect their personal information, how to recognize false news, and how to respond to online bullying. They should also understand how companies design apps to keep users scrolling for as long as possible. When young people know these things, they can make smarter choices for themselves.\n\nOf course, parents still have an important role. They can agree on screen-time limits with their children and keep phones out of bedrooms at night. But rules at home work best when children understand the reasons behind them. Education, not prohibition, will prepare teenagers for a world in which social media is not going away.",k:["ban|prohibit","teach|educat|school","privacy|personal information|protect","false|fake|news","bully","secret","parent|limit|screen"]},
+{title:"Is a degree necessary?",t:"For many years, young people have been told that a university degree is the only path to a good career. This advice is out of date. Today, practical training and apprenticeships can be just as valuable as a degree, and sometimes more so.\n\nUniversity is expensive, and many graduates finish their studies with large debts. Some of them then discover that their degree did not prepare them for the jobs that are actually available. In contrast, apprentices earn a salary while they learn, and they gain real experience that employers value. Many technical jobs, such as electricians, software testers, and healthcare assistants, are in high demand and pay well. Some large companies have even stopped requiring degrees for certain positions because they care more about skills than certificates.\n\nThis does not mean that universities are useless. Doctors, lawyers, and scientists still need years of academic study. However, schools and parents should present all options fairly, so that each student can choose the path that suits their interests and abilities, rather than following the crowd.",k:["apprentice|practical|training|skill","expensive|debt|cost","earn|salary|paid","experience","compan|employer|requir","doctor|lawyer|scientist|academic","choose|option|path"]},
+{title:"The four-day week",t:"Several companies around the world have tested a four-day working week, where employees work fewer hours for the same pay. The results have been impressive, and I believe more employers should adopt this model.\n\nIn many trials, productivity stayed the same or even improved. When people know they have less time, they waste less of it on unnecessary meetings and distractions. Employees also reported lower stress and better health, which led to fewer sick days. A longer weekend gives people time to rest, look after family members, or learn new skills, and they return to work with more energy.\n\nThere are benefits for employers too. Companies offering a four-day week receive more job applications and find it easier to keep their staff. Lower staff turnover saves money on hiring and training.\n\nIt is true that this model may not suit every business. Hospitals and shops, for example, need to stay open every day. But even these employers could use rotating schedules. The traditional five-day week was invented a century ago, and it is time to update it.",k:["four|4|shorter","productiv","stress|health|sick","rest|family|energy|weekend","applica|attract|keep|retain|turnover|hiring","hospital|shop|not suit|every business","rotat|schedule"]},
+{title:"Should we go cashless?",t:"Digital payments are fast and convenient, and in many cities people rarely carry cash anymore. Some governments and banks would like to go further and remove cash completely. I believe this would be a serious mistake.\n\nFirst, not everyone is comfortable with technology. Many elderly people, as well as those who live in rural areas with poor internet access, still depend on cash for their daily needs. A cashless society would leave them behind.\n\nSecond, cash protects privacy. Every digital payment creates a record that can be tracked by companies or governments, while cash allows people to make small purchases without being watched.\n\nThird, digital systems can fail. Power cuts, network problems, and cyber attacks can stop card machines and payment apps from working, sometimes for hours. During such failures, cash is the only reliable way to pay.\n\nNone of this means we should reject digital payments. They are useful, and most people will continue to choose them. However, cash should remain a legal and widely accepted option, so that everyone can take part in the economy.",k:["cash","elderly|old|rural|technology|internet","privacy|track|record|watch","fail|power|network|cyber|outage","digital|useful|convenient","option|accepted|keep|remain"]},
+{title:"Limiting tourism",t:"Tourism brings money and jobs to many places, but in some of the world's most beautiful destinations, it is causing serious damage. Popular beaches, old cities, and mountain trails are becoming so crowded that local people can no longer enjoy them. I believe governments should limit the number of visitors to these fragile places and charge higher entrance fees.\n\nToo many tourists can harm the environment. Coral reefs are damaged by boats and swimmers, and mountain paths are worn away by thousands of walking boots. In historic city centers, rents rise as homes are turned into holiday apartments, forcing local families to move out.\n\nLimits and fees can help. When the number of daily visitors is controlled, sites are protected and visitors have a better experience. The money raised through fees can be used to repair damage and support local communities.\n\nSome people argue that limits make travel unfair, because only rich people will be able to afford it. This risk can be reduced by offering discounts to students or to local residents. Responsible tourism will allow future generations to enjoy these places too.",k:["limit|restrict|number of visitors|fewer","fee|charge|price","environment|coral|damage|nature","rent|local|resident|homes|apartment","repair|protect|support|money raised","unfair|rich|afford","discount|student"]},
+{title:"Languages in primary school",t:"In many countries, children do not start learning a foreign language until they are eleven or twelve years old. Schools should introduce a second language much earlier, ideally in the first year of primary school.\n\nYoung children learn languages naturally. They copy sounds easily and are less afraid of making mistakes than older students. As a result, children who start early often develop better pronunciation and greater confidence when speaking.\n\nLearning another language also has benefits beyond communication. Research suggests that bilingual children are better at solving problems and switching between tasks. Studying a new language also introduces children to other cultures and helps them become more open-minded.\n\nSome people worry that adding another subject will put too much pressure on young pupils or take time away from reading and mathematics. However, early language lessons do not need to be long or difficult. Songs, games, and stories can make them enjoyable, and just thirty minutes a few times a week is enough to make progress. Starting early is a simple way to give every child a skill that will be useful for life.",k:["early|young|primary|younger","natural|copy|sound|pronunciation|afraid|confiden","problem|switch|brain|think","culture|open","pressure|time|reading|math","song|game|stor|fun|short"]},
+{title:"Classrooms or screens?",t:"Online learning grew rapidly in recent years, and many people now believe that classrooms will soon be replaced by screens. I disagree. For young students in particular, learning in person is still far more effective.\n\nSchool is not only about receiving information. In a classroom, students learn how to work in groups, solve disagreements, and build friendships. These social skills are difficult to develop through a computer screen. Teachers can also see immediately when a student looks confused or bored, and they can change their approach. Online, these signs are easy to miss. Many young learners also find it hard to concentrate at home, where games, television, and family noise compete for their attention.\n\nOnline education does have important strengths. It allows adults to study while working, and it gives people in remote areas access to courses they could not otherwise take. It is also useful for recorded lessons that students can review later.\n\nBut for children and teenagers, online tools should support classroom teaching, not replace it. A good education needs real people in a shared space.",k:["in person|classroom|face","social|group|friend|teamwork","teacher|confused|notice|see","concentrat|distract|attention|home","adult|remote|working|flexib","support|not replace"]},
+{title:"Free public transport",t:"Traffic jams and air pollution are major problems in many large cities. One effective solution would be to make public transport completely free.\n\nWhen buses and trains cost nothing, more people will choose them instead of driving. Fewer cars on the roads would mean less traffic, cleaner air, and fewer accidents.\n\nFree transport is also fair. Low-income workers often spend a large part of their salary on travel, and free buses would give them more money for food, rent, and education. It would also help students, elderly people, and job seekers reach more opportunities across the city.\n\nCritics point out that someone still has to pay. Running a transport system is expensive, and governments would need to find the money through taxes. However, cities already spend huge amounts on building and repairing roads, and on treating illnesses caused by pollution. Some cities, such as Tallinn in Estonia, have already introduced free transport for residents with positive results. If governments are serious about reducing pollution and inequality, free public transport is a smart investment.",k:["free","traffic|car|driving","pollution|clean|air","low-income|low income|poor|salary|fair|money","student|elderly|job|opportunit","tax|pay|expensive|cost","tallinn|estonia|example|road"]},
+{title:"Machines at work",t:"Many workers fear that robots and artificial intelligence will take their jobs. These fears are understandable, but history suggests that new technology changes work rather than ending it. Instead of resisting automation, governments and companies should focus on retraining workers.\n\nWhen machines take over repetitive tasks, such as sorting documents or entering data, people are free to do work that requires creativity, judgment, and personal contact. New jobs are also created, from maintaining machines to analyzing the data they produce. In the past, the arrival of computers removed some jobs but created many more.\n\nThe problem is that workers who lose their jobs do not automatically have the skills for new ones. That is why training is so important. Companies should offer courses to help employees learn new tools, and governments should support adults who want to change careers. Schools, too, should teach skills that machines find difficult, such as communication and problem solving.\n\nTechnology will continue to advance whatever we do. The real choice is whether we prepare people for these changes or leave them behind.",k:["robot|ai|artificial|automat|technolog|machine","retrain|train|course|learn","repetitive|data|routine","creativ|judgment|judgement|personal","new job|create","government|compan|support","school|communication|problem"]}
+]
+};
+
+</script>
+<script>
+{
+const $ = s => document.querySelector(s);
+const stage = $('#stage');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('vept_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('vept_' + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ---------- part definitions (from the guide) ---------- */
+const P = {
+  A:{name:'Read aloud',skill:'Speaking · Reading',desc:'Read a passage aloud. You have 30 seconds for each passage. Not finishing the passage does not lower your score.',tip:'Read fluently and naturally. Don’t rush. Don’t skip or change words, and try to get it right the first time.',time:'2 min'},
+  B:{name:'Repeats',skill:'Speaking · Listening',desc:'Listen to a sentence, then repeat it word-for-word. Sentences get harder as you go. Each one plays only once.',tip:'Keep contractions exactly as you hear them (say “it’s”, not “it is”). Don’t rephrase. Sound natural.',time:'5 min'},
+  C:{name:'Sentence builds',skill:'Speaking · Listening',desc:'You will hear three short phrases in random order. Put them in the right order and say the full sentence.',tip:'Use only the words you heard. Don’t add or change any words.',time:'3 min'},
+  D:{name:'Conversations',skill:'Listening',desc:'Listen to a short conversation between two speakers, then answer the question about it.',tip:'Listen for the key detail: who, where, when or why. A short, direct answer is best.',time:'2 min'},
+  E:{name:'Typing',skill:'Writing',desc:'Type the passage exactly as you see it, punctuation included. You have 60 seconds.',tip:'Accuracy comes first. Avoid backspace. Watch spelling, capitals and punctuation.',time:'1 min'},
+  F:{name:'Sentence completion',skill:'Reading · Writing',desc:'Read a sentence with one missing word, then type a word that fits. You have 25 seconds for each sentence.',tip:'Look for clues in the rest of the sentence, and check the grammar (verb tense, preposition, word form).',time:'8 min'},
+  G:{name:'Dictation',skill:'Listening · Writing',desc:'Listen to a sentence, then type it exactly as you heard it. You have 25 seconds to type.',tip:'If you miss a word, keep going and finish the sentence. Check spelling, contractions and punctuation.',time:'7 min'},
+  H:{name:'Passage reconstruction',skill:'Reading · Writing',desc:'Read a short paragraph for 30 seconds. It then disappears, and you have 90 seconds to rewrite it in your own words.',tip:'Get the main idea and as many details as you can. Write short, simple sentences in your own words, and don’t repeat points.',time:'6 min'},
+  I:{name:'Summary & opinion',skill:'Reading · Writing',desc:'Read the passage. Summarize the author’s opinion in 25–50 words, then give your own opinion in at least 50 words.',tip:'Summary: the author’s main view plus the reasons they give. Opinion: state your view clearly, then back it up with logical reasons and an example.',time:'18 min'}
+};
+const ORDER = 'ABCDEFGHI'.split('');
+const COUNTS = {
+  full: {A:2,B:16,C:10,D:12,E:1,F:20,G:16,H:3,I:1},
+  quick:{A:1,B:8,C:5,D:6,E:1,F:10,G:8,H:1,I:1}
+};
+const SKILLW = {
+  Speaking:{A:.3,B:.4,C:.3},
+  Listening:{B:.25,C:.15,D:.35,G:.25},
+  Reading:{A:.25,F:.45,H:.3},
+  Writing:{E:.15,F:.15,G:.2,H:.25,I:.25}
+};
+
+/* ---------- capabilities ---------- */
+let T = null, D = null, S = null, capsDone = false, typedSpeech = false, audioMode = 'checking';
+function srAdapter() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  let r = null, fin = [], par = [], isOpen = false;
+  const ad = {
+    persistent: true, lastError: null, denied: false,
+    isOpen: () => isOpen,
+    open() {
+      if (isOpen) return Promise.resolve();
+      return new Promise((res, rej) => {
+        isOpen = true; ad.lastError = null; let settled = false;
+        const make = () => {
+          const x = new SR(); x.lang = 'en-US'; x.continuous = true; x.interimResults = true;
+          x.onresult = e => { let interim = ''; for (let i = e.resultIndex; i < e.results.length; i++) { const y = e.results[i]; if (y.isFinal) fin.forEach(f => f({text: y[0].transcript})); else interim += y[0].transcript; } par.forEach(f => f({text: interim})); };
+          x.onstart = () => { if (!settled) { settled = true; res(); } };
+          x.onerror = e => {
+            ad.lastError = e.error;
+            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ad.denied = true; isOpen = false; }
+            if (!settled && e.error !== 'no-speech' && e.error !== 'aborted') { settled = true; isOpen = false; rej({code: ad.denied ? 'not_granted' : e.error}); }
+          };
+          x.onend = () => { ad.restarts = (ad.restarts || 0) + 1; if (isOpen && !ad.denied && r === x) setTimeout(() => { if (isOpen && !ad.denied && r === x) { try { r = make(); r.start(); } catch (err) {} } }, 120); };
+          return x;
+        };
+        r = make();
+        try { r.start(); } catch (e) { isOpen = false; settled = true; rej(e); }
+      });
+    },
+    close() { isOpen = false; const x = r; r = null; try { x && x.abort(); } catch (e) {} },
+    start() { return ad.open(); },
+    stop() { return new Promise(res => setTimeout(() => { ad.close(); res(); }, 700)); },
+    onPartial(f) { par.push(f); }, onFinal(f) { fin.push(f); }, onState() {}
+  };
+  return ad;
+}
+let rec = null;
+function hookDict(d) {
+  d.onFinal(({text}) => rec && rec.final(text));
+  d.onPartial(({text}) => rec && rec.partial(text));
+}
+async function initCaps() {
+  try {
+    if (window.claude && typeof window.claude.use === 'function') {
+      const g = n => window.claude.use(n).catch(() => null);
+      [T, D, S] = await Promise.all([g('tts'), g('dictation'), g('sample')]);
+    }
+  } catch (e) {}
+  if (!D) D = srAdapter();
+  if (D) hookDict(D);
+  audioMode = T ? 'claude' : ('speechSynthesis' in window ? 'browser' : 'text');
+  capsDone = true;
+  if (window.__onCaps) window.__onCaps();
+}
+initCaps();
+
+/* ---------- audio ---------- */
+let audioStop = () => {}, AC = null;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function unlockAudio() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state !== 'running') AC.resume(); } catch (e) {} }
+function beep(f = 880, ms = 170) {
+  return new Promise(r => {
+    try {
+      if (!AC) return r();
+      const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + ms / 1000);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + ms / 1000 + 0.03);
+      setTimeout(r, ms + 80);
+    } catch (e) { r(); }
+  });
+}
+let VOICES = [];
+function loadVoices() { try { const v = window.speechSynthesis.getVoices().filter(x => /^en[-_](US|GB|IN|AU)/i.test(x.lang)); if (v.length) VOICES = v.filter(x => x.localService).concat(v.filter(x => !x.localService)); } catch (e) {} }
+if ('speechSynthesis' in window) { loadVoices(); try { window.speechSynthesis.onvoiceschanged = loadVoices; } catch (e) {} }
+
+function synthSay(lines) {
+  return new Promise(res => {
+    const ss = window.speechSynthesis;
+    if (!VOICES.length) loadVoices();
+    const vs = VOICES;
+    let i = 0, over = false;
+    const fin = () => { if (!over) { over = true; res(); } };
+    const next = () => {
+      if (over) return; if (i >= lines.length) return fin();
+      const u = new SpeechSynthesisUtterance(lines[i].text); u.lang = 'en-US'; u.rate = 0.95;
+      const vi = {buttery:0, airy:1, glassy:2, rounded:3}[lines[i].voice] || 0;
+      if (vs.length) u.voice = vs[vi % vs.length];
+      u.onend = () => { i++; setTimeout(next, 450); }; u.onerror = () => { i++; next(); };
+      ss.speak(u);
+    };
+    audioStop = () => { ss.cancel(); fin(); };
+    const go = () => { try { ss.resume(); } catch (e) {} next(); };
+    if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(go, 300); } else setTimeout(go, 60);
+    const words = lines.reduce((n, l) => n + l.text.split(' ').length, 0);
+    setTimeout(fin, words * 500 + lines.length * 900 + 4000);
+  });
+}
+async function say(lines) {
+  if (T) {
+    try {
+      audioStop = () => { try { T.stop(); } catch (e) {} };
+      const words = lines.reduce((n, l) => n + l.text.split(' ').length, 0);
+      let timedOut = false;
+      await Promise.race([
+        T.speak(lines.map(l => ({text:l.text, voice:l.voice || 'buttery', language:'en'}))),
+        wait(words * 600 + lines.length * 1500 + 8000).then(() => { timedOut = true; try { T.stop(); } catch (e) {} })
+      ]);
+      return;
+    } catch (e) { if (e && (e.code === 'viewer_stopped')) return; if (e && e.code === 'not_granted') T = null; }
+  }
+  if (audioMode !== 'text' && 'speechSynthesis' in window) { audioMode = T ? audioMode : 'browser'; return synthSay(lines); }
+  const f = document.getElementById('flash');
+  for (const l of lines) {
+    if (f) f.textContent = l.text;
+    await new Promise(r => setTimeout(r, Math.max(2200, l.text.split(' ').length * 420)));
+  }
+  if (f) f.textContent = '';
+}
+function stopAudio() { try { audioStop(); } catch (e) {} audioStop = () => {}; }
+
+/* ---------- clock & steps ---------- */
+const within = (p, ms) => Promise.race([Promise.resolve(p).catch(() => {}), wait(ms)]);
+let lockUntil = 0;
+const userOK = () => Date.now() >= lockUntil;
+let toastT = null;
+function toast(msg, ok) {
+  const t = document.getElementById('toast'); if (!t) return;
+  t.textContent = msg; t.className = 'toast on ' + (ok ? 'ok' : 'no');
+  clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast'; }, 1600);
+}
+let clockId = null, curFinish = null, space = null, aborted = false;
+function clock(sec, onEnd) {
+  stopClock();
+  const start = Date.now(), el = $('#clock'), t = $('#clockt'), c = $('#ringc');
+  el.classList.add('on');
+  const tick = () => {
+    const left = Math.max(0, sec - (Date.now() - start) / 1000);
+    const s = Math.ceil(left);
+    t.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    c.setAttribute('stroke-dashoffset', String(94.25 * (1 - left / sec)));
+    el.classList.toggle('warn', left <= Math.min(10, sec * 0.25));
+    if (left <= 0) { stopClock(); onEnd(); }
+  };
+  tick(); clockId = setInterval(tick, 200);
+}
+function stopClock() { if (clockId) clearInterval(clockId); clockId = null; const el = $('#clock'); el.classList.remove('warn'); }
+function hideClock() { stopClock(); $('#clock').classList.remove('on'); }
+function step(fn) {
+  return new Promise(res => {
+    let done = false;
+    lockUntil = Date.now() + 350;
+    const finish = v => {
+      if (done) return; done = true; stopClock(); space = null; curFinish = null; stopAudio();
+      stage.querySelectorAll('button,textarea,input').forEach(b => { b.disabled = true; });
+      if (v) { const has = v.got !== undefined ? String(v.got).trim() : (v.sum || v.op); toast(has ? '\u2713 Answer saved' : 'No answer recorded', !!has); }
+      res(v);
+    };
+    curFinish = finish;
+    fn(finish, () => done, f => { curFinish = f; });
+  });
+}
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || !space) return;
+  const tg = e.target && e.target.tagName;
+  if (tg === 'TEXTAREA' || tg === 'INPUT') return;
+  e.preventDefault(); space();
+});
+
+/* ---------- UI bits ---------- */
+let RUN = null;
+function strip() {
+  const s = $('#strip');
+  if (!RUN) { s.innerHTML = ''; return; }
+  s.innerHTML = RUN.parts.map((p, i) => `<div class="seg ${i < RUN.pi ? 'done' : i === RUN.pi ? 'cur' : ''}">${p.key} · ${esc(P[p.key].name.split(' ')[0])}</div>`).join('');
+}
+function head(key, i, n) { return `<div class="qhead"><b>Part ${key}: ${esc(P[key].name)}</b><span>Question ${i + 1} of ${n}</span></div>`; }
+const listenBox = label => `<div class="listen" id="lsn"><div class="bars"><i></i><i></i><i></i><i></i><i></i></div><div><b id="lsnt">${label}</b><div class="mute small">The audio plays once. It can't be replayed.</div><div class="flash" id="flash"></div></div></div>`;
+function listening(on, text) { const l = $('#lsn'); if (!l) return; l.classList.toggle('on', on); if (text) $('#lsnt').textContent = text; }
+
+/* ---------- speaking response ---------- */
+function speakStep(o) {
+  return step(async (finish, isDone, setF) => {
+    stage.innerHTML = `<div class="task card">${o.html}<div id="resp"></div></div>`;
+    if (o.audio) {
+      listening(true, 'Listen\u2026');
+      await wait(700); if (isDone()) return;
+      await beep(660, 140); await wait(350);
+      if (isDone()) return;
+      await say(o.audio);
+      if (isDone()) return;
+      listening(false, 'Your turn');
+    }
+    const box = $('#resp');
+    const typedUI = (msg) => {
+      box.innerHTML = `${msg ? `<p class="note">${esc(msg)}</p>` : ''}<label class="lab small mute" for="ta">Type what you would say</label><textarea id="ta" style="min-height:90px"></textarea><div class="row"><button class="btn" id="sub" type="button">Submit</button><span class="small mute"><span class="kbd">Enter</span> to submit</span></div>`;
+      const ta = $('#ta'); ta.focus();
+      const done = () => userOK() && finish({got: ta.value.trim(), typed: true});
+      $('#sub').onclick = done;
+      ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); done(); } };
+      setF(done); clock(o.typedWait || 25, done);
+    };
+    if (typedSpeech || !D) { typedUI(); return; }
+    beep(880, 160);
+    let text = '', part = '', started = false, stopping = false, heard = 0, sil = null;
+    if (D.persistent && D.denied) { typedSpeech = true; typedUI('The browser blocked the microphone, so please type your spoken answers for the rest of this test.'); return; }
+    const live1 = !!(D.persistent && D.isOpen && D.isOpen());
+    box.innerHTML = `<div class="mic"><button class="micbtn" id="micb" type="button" aria-label="Start speaking"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><b id="mics">Click the mic or press <span class="kbd">Space</span> to start speaking</b><div class="live" id="live"></div><button class="linkbtn" id="toTyped" type="button">Mic not working? Type your answers instead</button></div>`;
+    const live = $('#live'), mics = $('#mics'), mb = $('#micb');
+    const show = () => { live.textContent = (text + ' ' + part).trim(); };
+    const end = async () => {
+      if (stopping) return; stopping = true; space = null;
+      stopClock(); if (sil) clearInterval(sil);
+      if (started) { mics.textContent = 'Saving your answer…'; mb.disabled = true; if (live1) await wait(600); else await within(D.stop(), 2500); }
+      rec = null;
+      finish({got: (text + ' ' + part).trim(), typed: false, started});
+    };
+    setF(end);
+    $('#toTyped').onclick = () => {
+      if (stopping) return;
+      if (sil) clearInterval(sil); rec = null; started = false; space = null;
+      typedSpeech = true; if (D.persistent) D.close();
+      typedUI('Switched to typing for the rest of the speaking questions in this test.');
+    };
+    const startRec = () => {
+      if (stopping) return;
+      if (started) { end(); return; }
+      if (!userOK() && !live1) return;
+      started = true; heard = 0;
+      rec = {final: t => { text += ' ' + t; part = ''; heard = Date.now(); show(); }, partial: t => { part = t; if (t) heard = Date.now(); show(); }};
+      let p;
+      if (live1) {
+        p = D.isOpen() ? Promise.resolve() : D.open();
+        const quiet = o.audio ? 2200 : 3500;
+        sil = setInterval(() => { if (heard && Date.now() - heard > quiet && (text + part).trim()) end(); }, 250);
+      } else { try { p = D.start(); } catch (e) { p = Promise.reject(e); } }
+      Promise.resolve(p).catch(e => {
+        rec = null; started = false; space = null;
+        typedSpeech = true;
+        if (!stopping) typedUI(e && e.code === 'not_granted' ? 'Microphone access was declined, so the speaking questions will be typed for the rest of this test.' : 'The microphone could not start, so please type your answer instead.');
+      });
+      mb.classList.add('rec'); mb.setAttribute('aria-label', 'Stop');
+      mics.innerHTML = live1 ? `Recording… speak now. It stops when you pause, or click / press <span class="kbd">Space</span>` : `Recording… click again or press <span class="kbd">Space</span> when you finish`;
+      clock(o.speak, end);
+    };
+    mb.onclick = startRec; space = startRec;
+    if (live1 && o.audio) { startRec(); return; }
+    clock(o.wait, () => { if (!started) end(); });
+  });
+}
+
+/* ---------- item runners ---------- */
+const RUNNERS = {
+  A: (it, i, n) => speakStep({html: head('A', i, n) + `<p class="inst">Read this passage aloud. Start when you're ready, and you'll have 30 seconds.</p><div class="passage">${esc(it)}</div>`, wait: 25, speak: 30}),
+  B: (it, i, n) => speakStep({html: head('B', i, n) + `<p class="inst">Listen to the sentence, then repeat it exactly.</p>` + listenBox('Get ready…'), audio: [{text: it}], wait: 8, speak: 12, typedWait: 25}),
+  C: (it, i, n) => {
+    let sh = shuffle(it); let g = 0;
+    while (sh.join('|') === it.join('|') && g++ < 10) sh = shuffle(it);
+    it._said = sh;
+    return speakStep({html: head('C', i, n) + `<p class="inst">Listen to the three phrases. Then say them as one correct sentence.</p>` + listenBox('Get ready…'), audio: sh.map(t => ({text: t})), wait: 8, speak: 14, typedWait: 30});
+  },
+  D: (it, i, n) => speakStep({html: head('D', i, n) + `<p class="inst">Listen to the conversation and the question. Then answer the question.</p>` + listenBox('Get ready…'), audio: [...it.l.map((t, j) => ({text: t, voice: j % 2 ? 'airy' : 'buttery'})), {text: 'Question. ' + it.q, voice: 'glassy'}], wait: 8, speak: 10, typedWait: 20}),
+  E: (it, i, n) => step((finish, isDone, setF) => {
+    stage.innerHTML = `<div class="task card">${head('E', i, n)}<p class="inst">Type the passage exactly as shown, including capital letters and punctuation. The clock is already running.</p><div class="passage" style="font-size:18px">${esc(it)}</div><textarea id="ta" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" style="margin-top:14px;min-height:170px" placeholder="Start typing here…"></textarea><div class="row"><button class="btn ghost" id="sub" type="button">I'm done</button></div></div>`;
+    const ta = $('#ta'); ta.focus();
+    ta.addEventListener('paste', e => e.preventDefault());
+    const t0 = Date.now(); let bs = 0;
+    ta.addEventListener('keydown', e => { if (e.key === 'Backspace' || e.key === 'Delete') bs++; });
+    const done = () => userOK() && finish({got: ta.value, secs: Math.min(60, (Date.now() - t0) / 1000), bs});
+    $('#sub').onclick = done; setF(done); clock(60, done);
+  }),
+  F: (it, i, n) => step((finish, isDone, setF) => {
+    const [a, b] = it[0].split('___');
+    stage.innerHTML = `<div class="task card">${head('F', i, n)}<p class="inst">Type one word that best completes the sentence.</p><p class="sent">${esc(a)}<input type="text" class="blank" id="in" autocomplete="off" spellcheck="false" aria-label="Missing word">${esc(b)}</p><div class="row"><button class="btn" id="sub" type="button">Next</button><span class="small mute"><span class="kbd">Enter</span> for next</span></div></div>`;
+    const inp = $('#in'); inp.focus();
+    const done = () => userOK() && finish({got: inp.value.trim()});
+    $('#sub').onclick = done; inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); done(); } };
+    setF(done); clock(25, done);
+  }),
+  G: (it, i, n) => step(async (finish, isDone, setF) => {
+    stage.innerHTML = `<div class="task card">${head('G', i, n)}<p class="inst">Listen to the sentence, then type exactly what you heard.</p>${listenBox('Get ready…')}<div id="resp"></div></div>`;
+    listening(true, 'Listen\u2026');
+    await wait(700); if (isDone()) return;
+    await beep(660, 140); await wait(350); if (isDone()) return;
+    await say([{text: it}]); if (isDone()) return;
+    beep(880, 160);
+    listening(false, 'Now type the sentence');
+    $('#resp').innerHTML = `<textarea id="ta" style="min-height:90px;margin-top:16px" spellcheck="false" autocomplete="off" autocorrect="off"></textarea><div class="row"><button class="btn" id="sub" type="button">Next</button><span class="small mute"><span class="kbd">Enter</span> for next</span></div>`;
+    const ta = $('#ta'); ta.focus();
+    const done = () => userOK() && finish({got: ta.value.trim()});
+    $('#sub').onclick = done; ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); done(); } };
+    setF(done); clock(25, done);
+  }),
+  H: (it, i, n) => step((finish, isDone, setF) => {
+    stage.innerHTML = `<div class="task card">${head('H', i, n)}<p class="inst"><b>Read</b> the paragraph. It will disappear after 30 seconds.</p><div class="passage">${esc(it.t)}</div><div class="row"><button class="btn ghost" id="rdy" type="button">I'm ready to write</button></div></div>`;
+    const write = () => {
+      stage.innerHTML = `<div class="task card">${head('H', i, n)}<p class="inst"><b>Rewrite</b> the paragraph in your own words. Include the main points and as many details as you can.</p><textarea id="ta" style="min-height:200px"></textarea><div class="wc" id="wc">0 words</div><div class="row"><button class="btn" id="sub" type="button">Submit</button></div></div>`;
+      const ta = $('#ta'); ta.focus();
+      ta.oninput = () => { $('#wc').textContent = wcount(ta.value) + ' words'; };
+      const done = () => userOK() && finish({got: ta.value.trim()});
+      $('#sub').onclick = done; setF(done); clock(90, done);
+    };
+    $('#rdy').onclick = write; setF(() => finish({got: ''}));
+    clock(30, write);
+  }),
+  I: (it, i, n) => step((finish, isDone, setF) => {
+    const mins = RUN.size === 'quick' ? 12 : 18;
+    stage.innerHTML = `<div class="task card" style="max-width:1000px">${head('I', i, n)}<p class="inst">Read the passage. Then write (1) a summary of the <b>author's</b> opinion in 25–50 words, and (2) <b>your own</b> opinion on the topic in at least 50 words. You have ${mins} minutes for both.</p>
+    <div class="grid2"><div class="passage" style="font-size:17px"><h3 style="font-family:Figtree">${esc(it.title)}</h3>${it.t.split('\n\n').map(p => `<p>${esc(p)}</p>`).join('')}</div>
+    <div><label class="lab" for="s1"><b>Summary of the author's opinion</b> <span class="mute small">(25–50 words)</span></label><textarea id="s1" style="min-height:150px"></textarea><div class="wc" id="w1">0 words</div>
+    <label class="lab" for="s2" style="display:block;margin-top:16px"><b>Your opinion</b> <span class="mute small">(at least 50 words)</span></label><textarea id="s2" style="min-height:210px"></textarea><div class="wc" id="w2">0 words</div>
+    <div class="row"><button class="btn" id="sub" type="button">Submit both</button></div></div></div></div>`;
+    const s1 = $('#s1'), s2 = $('#s2');
+    const upd = () => { const a = wcount(s1.value), b = wcount(s2.value); $('#w1').textContent = a + ' words'; $('#w1').classList.toggle('ok', a >= 25 && a <= 50); $('#w2').textContent = b + ' words'; $('#w2').classList.toggle('ok', b >= 50); };
+    s1.oninput = upd; s2.oninput = upd;
+    const done = () => userOK() && finish({sum: s1.value.trim(), op: s2.value.trim()});
+    $('#sub').onclick = done; setF(done); clock(mins * 60, done);
+  })
+};
+
+/* ---------- picking questions (no repeats until a bank is used up) ---------- */
+function pickN(bank, arr, n) {
+  const all = arr.map((_, i) => i);
+  let seen = store.get('seen_' + bank, []).filter(i => i < arr.length);
+  const pool = all.filter(i => !seen.includes(i));
+  let pick;
+  if (pool.length >= n) { pick = shuffle(pool).slice(0, n); seen = seen.concat(pick); }
+  else { const rest = shuffle(all.filter(i => !pool.includes(i))).slice(0, n - pool.length); pick = shuffle(pool.concat(rest)); seen = rest.slice(); }
+  store.set('seen_' + bank, seen);
+  return pick.map(i => arr[i]);
+}
+function build(mode, only, size) {
+  size = mode === 'custom' ? (size || 'full') : mode;
+  const counts = COUNTS[size];
+  const keys = only ? ORDER.filter(k => [].concat(only).includes(k)) : ORDER;
+  const parts = keys.map(k => {
+    const n = counts[k];
+    let items;
+    if (k === 'B') {
+      const e = Math.round(n * 0.31), h = Math.round(n * 0.31), m = n - e - h;
+      items = [...pickN('B1', BANK.B1, e), ...pickN('B2', BANK.B2, m), ...pickN('B3', BANK.B3, h)];
+    } else if (k === 'C') items = pickN('C', BANK.C, n).map(a => a.slice());
+    else items = pickN(k, BANK[k], n);
+    return {key: k, items, resp: []};
+  });
+  return {mode, only: only ? keys : null, size, parts, pi: 0, started: Date.now()};
+}
+
+/* ---------- flow ---------- */
+function intro(key, run) {
+  return new Promise(res => {
+    const p = P[key], n = run.parts[run.pi].items.length;
+    const noMic = (key === 'A') && (typedSpeech || !D);
+    const ex = {
+      A:'Example: "Australia is a very large country. It is the sixth largest country in the world…"',
+      B:'Example: "It’s not too late to change your mind."',
+      C:'Example: you hear "to London … my boss … moved" and say "My boss moved to London."',
+      D:'Example: Speaker 1: "Congratulations on graduating!" … Question: "Why does the man deserve a party?"',
+      E:'Example: "Many people do not like public speaking. They are afraid to speak in front of a large group…"',
+      F:'Example: "He arrives ____ and is often the first one here." → early',
+      G:'Example: you hear "How long can I keep this book?" and type it exactly.',
+      H:'Example: a short story about a lost wallet. You rewrite the story with its main points and details.',
+      I:'Example: a passage arguing that children should grow up in a big city.'
+    }[key];
+    hideClock();
+    stage.innerHTML = `<div class="task card"><div class="qhead"><b>Part ${key} of the test</b><span>${n} question${n > 1 ? 's' : ''} · about ${esc(p.time)}</span></div><h1>${esc(p.name)}</h1><p class="lede">${esc(p.desc)}</p>
+      <div class="tip"><b>Tip from your guide:</b> ${esc(p.tip)}</div><p class="note" style="margin-top:14px">${esc(ex)}</p>
+      ${noMic ? `<div class="tip w" style="margin-top:14px">No microphone is available here, so Read aloud will be skipped and won't count toward your score. Open this page in Chrome or in the Claude desktop app to practise speaking.</div>` : ''}
+      ${'BCD'.includes(key) && (typedSpeech || !D) ? `<div class="tip w" style="margin-top:14px">No microphone is available, so you'll type what you would say. Your listening is still tested, but your speaking isn't.</div>` : ''}
+      <div class="row"><button class="btn" id="go" type="button">Begin Part ${key}</button><span class="small mute">Skill tested: ${esc(p.skill)}</span></div></div>`;
+    $('#go').focus();
+    curFinish = () => { curFinish = null; res('abort'); };
+    $('#go').onclick = async () => {
+      curFinish = null; unlockAudio();
+      if ('ABCD'.includes(key) && D && D.persistent && !typedSpeech && !D.denied && !D.isOpen()) D.open().catch(() => { typedSpeech = true; });
+      if ('BCDG'.includes(key) && !noMic) {
+        const b = $('#go'); b.disabled = true; b.textContent = 'Starting\u2026';
+        await say([{text: `Part ${key}. ${p.name}.`}]); await wait(500);
+      }
+      res(noMic ? 'skip' : 'go');
+    };
+  });
+}
+async function runTest(mode, only, size) {
+  RUN = build(mode, only, size); aborted = false;
+  $('#endbtn').classList.add('on');
+  for (RUN.pi = 0; RUN.pi < RUN.parts.length; RUN.pi++) {
+    const part = RUN.parts[RUN.pi]; strip();
+    const g = await intro(part.key, RUN);
+    if (g === 'abort') break;
+    if (g === 'skip') { part.skipped = true; continue; }
+    for (let i = 0; i < part.items.length; i++) {
+      if (aborted) break;
+      const r = await RUNNERS[part.key](part.items[i], i, part.items.length);
+      part.resp[i] = r;
+      if (aborted) break;
+    }
+    const nxt = RUN.parts[RUN.pi + 1];
+    if (D && D.persistent && D.isOpen() && (!nxt || !'ABCD'.includes(nxt.key))) D.close();
+    if (aborted) break;
+  }
+  $('#endbtn').classList.remove('on'); hideClock(); rec = null;
+  if (D && D.persistent) D.close();
+  RUN.pi = RUN.parts.length; strip();
+  finishTest();
+}
+$('#endbtn').onclick = () => $('#modal').classList.add('on');
+$('#mNo').onclick = () => $('#modal').classList.remove('on');
+$('#mYes').onclick = () => { $('#modal').classList.remove('on'); aborted = true; if (curFinish) curFinish(null); };
+
+/* ---------- text scoring helpers ---------- */
+const ONES = 'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split(' ');
+const TENS = ',,twenty,thirty,forty,fifty,sixty,seventy,eighty,ninety'.split(',');
+const n2w = n => n < 20 ? ONES[n] : n < 100 ? TENS[Math.floor(n / 10)] + (n % 10 ? ' ' + ONES[n % 10] : '') : n < 1000 ? ONES[Math.floor(n / 100)] + ' hundred' + (n % 100 ? ' ' + n2w(n % 100) : '') : String(n);
+const CONTR = {"it's":"it is","that's":"that is","there's":"there is","what's":"what is","he's":"he is","she's":"she is","here's":"here is","who's":"who is","let's":"let us","i'm":"i am","you're":"you are","we're":"we are","they're":"they are","i've":"i have","you've":"you have","we've":"we have","they've":"they have","i'll":"i will","you'll":"you will","we'll":"we will","they'll":"they will","he'll":"he will","she'll":"she will","it'll":"it will","i'd":"i would","you'd":"you would","we'd":"we would","they'd":"they would","he'd":"he would","she'd":"she would","don't":"do not","doesn't":"does not","didn't":"did not","can't":"can not","cannot":"can not","won't":"will not","isn't":"is not","aren't":"are not","wasn't":"was not","weren't":"were not","hasn't":"has not","haven't":"have not","hadn't":"had not","couldn't":"could not","wouldn't":"would not","shouldn't":"should not","printer's":"printer is","weather's":"weather is","everything's":"everything is","ok":"okay","alright":"all right"};
+function light(s) {
+  return String(s || '').toLowerCase().replace(/[‘’`]/g, "'").replace(/%/g, ' percent').replace(/&/g, ' and ')
+    .replace(/\d+/g, m => n2w(+m)).replace(/[^a-z0-9' ]+/g, ' ').replace(/(^|\s)'|'(\s|$)/g, ' ').split(/\s+/).filter(Boolean);
+}
+const full = s => light(s).flatMap(w => (CONTR[w] || w).split(' '));
+function ed(a, b) {
+  const m = a.length, n = b.length; let prev = Array.from({length: n + 1}, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+  return prev[n];
+}
+function bestPrefix(sp, ref) {
+  const m = sp.length, n = ref.length; let prev = Array.from({length: n + 1}, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (sp[i - 1] === ref[j - 1] ? 0 : 1)); prev = cur; }
+  let bj = 0; for (let j = 0; j <= n; j++) if (prev[j] <= prev[bj]) bj = j;
+  return {j: bj, dist: prev[bj]};
+}
+const sim = (a, b) => { const A = full(a), B = full(b); if (!A.length) return 0; return Math.max(0, 1 - ed(A, B) / Math.max(A.length, B.length)); };
+const wcount = s => (String(s).trim().match(/\S+/g) || []).length;
+function diffHTML(exp, got) {
+  const a = light(exp), b = light(got), m = a.length, n = b.length;
+  const d = Array.from({length: m + 1}, (_, i) => { const r = new Array(n + 1).fill(0); r[0] = i; return r; });
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  const out = []; let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && d[i][j] === d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)) { out.push(a[i - 1] === b[j - 1] ? esc(a[i - 1]) : `<span class="sub" title="you: ${esc(b[j - 1])}">${esc(a[i - 1])} <span class="extra">(you: ${esc(b[j - 1])})</span></span>`); i--; j--; }
+    else if (i > 0 && d[i][j] === d[i - 1][j] + 1) { out.push(`<span class="miss">${esc(a[i - 1])}</span>`); i--; }
+    else { out.push(`<span class="extra">+${esc(b[j - 1])}</span>`); j--; }
+  }
+  return out.reverse().join(' ');
+}
+const hasKey = (text, k) => { const t = ' ' + light(text).join(' ') + ' '; return k.split('|').some(alt => { const a = light(alt).join(' '); return a.length <= 3 ? t.includes(' ' + a + ' ') : t.includes(a); }); };
+const mech = s => { const t = String(s).trim(); if (!t) return 0; let m = 0; if (/^[A-Z]/.test(t)) m += .4; if (/[.!?]$/.test(t)) m += .3; const sents = t.split(/[.!?]+/).filter(x => x.trim()); const avg = wcount(t) / Math.max(1, sents.length); if (avg <= 24) m += .3; return m; };
+
+/* ---------- grading ---------- */
+const mark = s => s >= .95 ? ['ok', '✓'] : s >= .6 ? ['mid', '½'] : ['bad', '✗'];
+function gradePart(part) {
+  const k = part.key, out = [];
+  part.items.forEach((it, i) => {
+    const r = part.resp[i];
+    const g = {score: 0, notes: []};
+    const none = !r || (r.got !== undefined && !String(r.got).trim() && k !== 'I') || (k === 'I' && !(r.sum || r.op));
+    if (k === 'A') {
+      g.q = it; g.exp = it;
+      if (none) { g.notes.push(r && r.started === false ? 'You didn’t start recording in time.' : 'No speech was picked up.'); }
+      else {
+        const sp = full(r.got), ref = full(it), {j, dist} = bestPrefix(sp, ref);
+        const acc = Math.max(0, 1 - dist / Math.max(j, sp.length, 1));
+        const wpm = light(r.got).length * 2;
+        const pace = wpm >= 110 && wpm <= 170 ? 1 : wpm < 110 ? Math.max(0, (wpm - 50) / 60) : Math.max(.5, 1 - (wpm - 170) / 80);
+        g.score = sp.length < 5 ? 0 : .7 * acc + .3 * pace;
+        g.stat = {acc, wpm, cover: j / ref.length};
+        g.got = r.got; g.diff = diffHTML(ref.slice(0, j).join(' '), light(r.got).join(' '));
+        g.notes.push(`Accuracy ${Math.round(acc * 100)}% · about ${wpm} words per minute · read ${Math.round(j / ref.length * 100)}% of the passage`);
+        if (wpm < 100) g.notes.push('Your pace was slow. Aim for a steady 120–160 words a minute.');
+        if (wpm > 175) g.notes.push('You read very fast. Slow down a little and use natural pauses at commas and full stops.');
+        if (acc < .9) g.notes.push('Some words were skipped, changed or not heard clearly. See the marked words.');
+      }
+    } else if (k === 'B' || k === 'C') {
+      const exp = k === 'B' ? it : it.join(' ');
+      g.q = k === 'C' ? 'You heard: ' + (it._said || it).join(' / ') : 'You heard the sentence once.'; g.exp = exp;
+      if (none) g.notes.push('No response.');
+      else {
+        const s = sim(exp, r.got); g.got = r.got; g.diff = diffHTML(exp, r.got);
+        if (k === 'B') g.score = s >= .97 ? 1 : s >= .5 ? s * .9 : s * .4;
+        else g.score = s >= .95 ? 1 : s >= .75 ? .5 : 0;
+        const la = light(exp).join(' '), lb = light(r.got).join(' ');
+        if (la !== lb && full(exp).join(' ') === full(r.got).join(' ')) { g.notes.push('Contraction changed (e.g. “it’s” ↔ “it is”). The real test expects the exact form you heard.'); g.contr = true; }
+        if (k === 'C' && full(r.got).length > full(exp).length) g.notes.push('You added words. Use only the words in the three phrases.');
+      }
+    } else if (k === 'D') {
+      g.q = it.l.map((t, j) => `Speaker ${j % 2 + 1}: ${t}`).join('\n') + '\nQuestion: ' + it.q; g.exp = it.a;
+      if (none) g.notes.push('No answer.');
+      else { g.got = r.got; g.score = it.k.some(kk => hasKey(r.got, kk)) ? 1 : 0; if (!g.score) g.notes.push('Your answer missed the key detail.'); }
+    } else if (k === 'E') {
+      g.q = 'Typing passage'; g.exp = it;
+      if (none) g.notes.push('Nothing typed.');
+      else {
+        const tw = r.got.trim().split(/\s+/), ref = it.split(/\s+/), {j, dist} = bestPrefix(tw, ref);
+        const acc = Math.max(0, 1 - dist / Math.max(j, tw.length, 1)), wpm = Math.round(r.got.trim().length / 5 / (Math.max(r.secs || 60, 10) / 60));
+        g.score = .5 * Math.min(1, wpm / 45) + .5 * acc * acc; g.got = r.got;
+        g.stat = {wpm, acc, bs: r.bs};
+        g.notes.push(`${wpm} words per minute · ${Math.round(acc * 100)}% exact words (capitals and punctuation count) · backspace used ${r.bs || 0} times`);
+        const wrong = []; tw.forEach((w, x) => { if (x < j && ref[x] !== w && wrong.length < 6) wrong.push(`“${w}” → “${ref[x]}”`); });
+        if (wrong.length) g.notes.push('Examples to check: ' + wrong.join(', '));
+      }
+    } else if (k === 'F') {
+      g.q = it[0]; g.exp = it[1].split('|').slice(0, 4).join(' / ');
+      if (none) g.notes.push('Time ran out before you answered.');
+      else {
+        g.got = r.got; const a = light(r.got).join(' ');
+        const ok = it[1].split('|').map(x => light(x).join(' '));
+        if (ok.includes(a)) g.score = 1; else { g.score = 0; g.pending = true; }
+      }
+    } else if (k === 'G') {
+      g.q = 'Dictation'; g.exp = it;
+      if (none) g.notes.push('Nothing typed.');
+      else {
+        const s = sim(it, r.got); g.got = r.got; g.diff = diffHTML(it, r.got); g.score = s >= .99 ? 1 : s * .85;
+        if (s < .99 && light(it).length === light(r.got).length) g.notes.push('Check the spelling of the marked word(s).');
+        if (/[a-z]/.test(r.got[0] || '') || !/[.?!]$/.test(r.got.trim())) g.notes.push('Start with a capital letter and end with the right punctuation (. or ?).');
+      }
+    } else if (k === 'H') {
+      g.q = 'Original paragraph'; g.exp = it.t;
+      if (none) g.notes.push('Nothing written.');
+      else {
+        g.got = r.got; const cov = it.k.filter(kk => hasKey(r.got, kk)).length / it.k.length; const w = wcount(r.got);
+        const len = w >= 25 && w <= 90 ? 1 : w < 25 ? w / 25 : Math.max(.6, 1 - (w - 90) / 80);
+        g.score = Math.min(1, .75 * cov + .15 * len + .1 * mech(r.got)); g.cov = cov;
+        g.notes.push(`Covered about ${Math.round(cov * 100)}% of the key points · ${w} words`);
+        const missed = it.k.filter(kk => !hasKey(r.got, kk)).map(kk => kk.split('|')[0]);
+        if (missed.length) g.notes.push('Details you may have missed: ' + missed.slice(0, 5).join(', '));
+      }
+    } else if (k === 'I') {
+      g.q = it.title; g.exp = it.t;
+      if (none) g.notes.push('Nothing written.');
+      else {
+        g.got = r; const w1 = wcount(r.sum), w2 = wcount(r.op);
+        const cov = it.k.filter(kk => hasKey(r.sum + ' ' + r.op, kk)).length / it.k.length;
+        const sS = (w1 >= 25 && w1 <= 50 ? .3 : w1 > 50 ? .2 : .3 * w1 / 25) + .5 * Math.min(1, cov * 1.4) + .2 * mech(r.sum);
+        const opn = /\b(i think|i believe|in my opinion|i agree|i disagree|i feel|in my view|personally)\b/i.test(r.op) ? .2 : 0;
+        const rsn = /\b(because|since|for example|for instance|therefore|firstly|first|also|however|moreover|as a result)\b/i.test(r.op) ? .2 : 0;
+        const sO = .4 * Math.min(1, w2 / 50) + opn + rsn + .2 * mech(r.op);
+        g.score = Math.min(1, .5 * sS + .5 * sO);
+        g.notes.push(`Summary: ${w1} words${w1 < 25 ? ' (too short, need 25–50)' : w1 > 50 ? ' (too long, keep it to 50 or fewer)' : ' ✓'} · Opinion: ${w2} words${w2 < 50 ? ' (need at least 50)' : ' ✓'}`);
+        if (!opn) g.notes.push('State your view clearly, e.g. “In my opinion…” or “I agree that…”.');
+        if (!rsn) g.notes.push('Support your opinion with reasons, e.g. “because…” or “for example…”.');
+      }
+    }
+    out.push(g);
+  });
+  return out;
+}
+function compute(run) {
+  const parts = {};
+  run.parts.forEach(p => {
+    if (p.skipped) return;
+    const answered = p.resp.length;
+    if (!answered) return;
+    const g = p.graded || (p.graded = gradePart(p));
+    const pct = g.reduce((a, x) => a + x.score, 0) / g.length;
+    parts[p.key] = {pct, g, n: g.length};
+  });
+  const skills = {};
+  for (const [s, w] of Object.entries(SKILLW)) {
+    let tot = 0, ww = 0;
+    for (const [k, v] of Object.entries(w)) if (parts[k]) {
+      if (s === 'Speaking' && 'BC'.includes(k) && run.parts.find(p => p.key === k).resp.every(r => !r || r.typed)) continue;
+      tot += parts[k].pct * v; ww += v;
+    }
+    skills[s] = ww ? tot / ww : null;
+  }
+  const av = Object.values(skills).filter(v => v !== null);
+  const overall = av.length ? av.reduce((a, b) => a + b, 0) / av.length : 0;
+  return {parts, skills, overall};
+}
+const to80 = p => Math.round(20 + 60 * p);
+function cefr(s) { return s >= 79 ? ['C2', 'Proficient'] : s >= 69 ? ['C1', 'Advanced'] : s >= 58 ? ['B2', 'Upper intermediate'] : s >= 47 ? ['B1', 'Intermediate'] : s >= 36 ? ['A2', 'Elementary'] : s >= 26 ? ['A1', 'Beginner'] : ['Below A1', 'Starting out']; }
+
+/* ---------- AI grading ---------- */
+let aiState = 'idle', aiData = null;
+async function runAI(run, btnTriggered) {
+  if (!S || aiState === 'busy') return;
+  const res = compute(run);
+  const F = run.parts.find(p => p.key === 'F'), H = run.parts.find(p => p.key === 'H'), I = run.parts.find(p => p.key === 'I');
+  const fc = F && F.graded ? F.graded.map((g, i) => g.pending ? {id: i, sentence: F.items[i][0], answer: g.got} : null).filter(Boolean) : [];
+  const pr = H && H.graded ? H.graded.map((g, i) => g.got ? {id: i, original: H.items[i].t, response: g.got} : null).filter(Boolean) : [];
+  const so = I && I.graded && I.graded[0].got ? {passage: I.items[0].t, summary: I.graded[0].got.sum, opinion: I.graded[0].got.op} : null;
+  const partPct = Object.fromEntries(Object.entries(res.parts).map(([k, v]) => [P[k].name, Math.round(v.pct * 100)]));
+  const issues = []; Object.values(res.parts).forEach(v => v.g.forEach(g => g.notes.forEach(n => { if (issues.length < 30) issues.push(n); })));
+  aiState = 'busy'; renderAIStatus();
+  const prompt = `You are a strict but fair examiner for the Pearson Versant English Placement Test, grading a candidate's practice test for a Deloitte communication skills assessment.
+Grade only what is given. Return ONLY JSON with this shape:
+{"sentence_completion":[{"id":0,"acceptable":true,"why":"short reason"}],
+ "passage_reconstruction":[{"id":0,"content":0-10,"grammar":0-10,"comment":"2 sentences: what was good, what to fix"}],
+ "summary_opinion":{"summary":0-10,"opinion":0-10,"grammar":0-10,"comment":"3 sentences of specific feedback"} or null,
+ "coaching":["4 to 6 specific, practical tips based on this candidate's actual mistakes, each under 35 words"],
+ "level_comment":"one or two encouraging but honest sentences about their current level"}
+Rules: sentence_completion: acceptable=true if the word fits grammatically and makes sense in context (one word, correct form and spelling).
+passage_reconstruction: content = how many main points and details are kept accurately; grammar = correctness and clarity. Rewording in own words is good; mild penalty for copying sentences word-for-word.
+summary_opinion: summary = accurately states the AUTHOR'S view and reasons in 25-50 words (penalize outside range); opinion = clear position, logical reasons, at least 50 words; grammar = accuracy, spelling, sentence control.
+DATA:
+${JSON.stringify({sentence_completion: fc, passage_reconstruction: pr, summary_opinion: so, part_scores_percent: partPct, auto_detected_issues: issues})}`;
+  try {
+    const v = await S.json(prompt, {modelTier: 'default'});
+    aiData = v && typeof v === 'object' ? v : null;
+    if (aiData) applyAI(run, aiData);
+    aiState = aiData ? 'done' : 'failed';
+  } catch (e) { aiState = e && e.code === 'not_granted' ? 'denied' : 'failed'; }
+  if (RUN === run && run.results) renderResults(run);
+}
+function applyAI(run, a) {
+  const F = run.parts.find(p => p.key === 'F'), H = run.parts.find(p => p.key === 'H'), I = run.parts.find(p => p.key === 'I');
+  if (F && F.graded && Array.isArray(a.sentence_completion)) a.sentence_completion.forEach(x => { const g = F.graded[x && x.id]; if (g && g.pending) { g.pending = false; g.score = x.acceptable ? 1 : 0; if (x.why) g.notes.push('Claude: ' + String(x.why)); } });
+  if (H && H.graded && Array.isArray(a.passage_reconstruction)) a.passage_reconstruction.forEach(x => { const g = H.graded[x && x.id]; if (g && g.got) { const c = +x.content, gr = +x.grammar; if (isFinite(c) && isFinite(gr)) { g.score = Math.max(0, Math.min(1, (.65 * c + .35 * gr) / 10)); g.ai = `Content ${c}/10 · Grammar ${gr}/10`; } if (x.comment) g.aiC = String(x.comment); } });
+  if (I && I.graded && a.summary_opinion && I.graded[0].got) { const x = a.summary_opinion, g = I.graded[0]; const s1 = +x.summary, s2 = +x.opinion, s3 = +x.grammar; if ([s1, s2, s3].every(isFinite)) { g.score = Math.max(0, Math.min(1, (.4 * s1 + .4 * s2 + .2 * s3) / 10)); g.ai = `Summary ${s1}/10 · Opinion ${s2}/10 · Grammar ${s3}/10`; } if (x.comment) g.aiC = String(x.comment); }
+}
+function renderAIStatus() {
+  const el = document.getElementById('aist'); if (!el) return;
+  el.innerHTML = aiState === 'busy' ? `<span class="spin"></span> Claude is grading your writing and preparing personal coaching…`
+    : aiState === 'done' ? 'Your writing was graded by Claude.'
+    : aiState === 'denied' ? 'Claude grading was declined, so your writing scores are automatic estimates.'
+    : aiState === 'failed' ? `Claude grading didn't finish, so your writing scores are automatic estimates. <button class="chip" id="retry" type="button">Try again</button>`
+    : S ? `<button class="btn" id="aibtn" type="button">Grade my writing with Claude</button> <span class="small mute">For more accurate writing scores and personal coaching</span>` : 'Writing scores are automatic estimates (Claude grading is available when this page is opened on claude.ai).';
+  const b = document.getElementById('aibtn') || document.getElementById('retry');
+  if (b) b.onclick = () => runAI(RUN, true);
+}
+
+/* ---------- results ---------- */
+function finishTest() {
+  const run = RUN;
+  aiState = 'idle'; aiData = null;
+  run.parts.forEach(p => { delete p.graded; });
+  const r = compute(run);
+  run.hid = 'h' + Date.now();
+  saveHist(run, r);
+  renderResults(run);
+  const needAI = run.parts.some(p => (p.key === 'H' || p.key === 'I' || p.key === 'F') && p.resp.length);
+  if (S && needAI) runAI(run, false);
+}
+const practicePct = r => { const v = Object.values(r.parts); return v.length ? v.reduce((a, x) => a + x.pct, 0) / v.length : 0; };
+function saveHist(run, r) {
+  const h = store.get('hist', []).filter(x => x.id !== run.hid);
+  h.unshift({id: run.hid, d: Date.now(), mode: run.mode, only: run.only || null, pc: Math.round(practicePct(r) * 100), o: to80(r.overall), s: Object.fromEntries(Object.entries(r.skills).map(([k, v]) => [k, v === null ? null : to80(v)])), p: Object.fromEntries(Object.entries(r.parts).map(([k, v]) => [k, Math.round(v.pct * 100)]))});
+  store.set('hist', h.slice(0, 40));
+}
+function tipsFor(r) {
+  const T = [];
+  const ps = Object.entries(r.parts).sort((a, b) => a[1].pct - b[1].pct);
+  const add = (k, t, w) => T.push({k, t, w});
+  for (const [k, v] of ps) {
+    const pc = v.pct;
+    if (pc >= .9) continue;
+    const g = v.g;
+    if (k === 'A') {
+      const st = g.filter(x => x.stat); const wpm = st.length ? st.reduce((a, x) => a + x.stat.wpm, 0) / st.length : 0;
+      add(k, wpm && wpm < 110 ? `Read aloud: your pace was about ${Math.round(wpm)} words a minute. Practise reading news paragraphs aloud for 5 minutes a day, aiming for 120–160 words a minute and pausing at commas and full stops.` : `Read aloud: focus on accuracy. Read each sentence once, without restarting, skipping or swapping words. Record yourself and compare it with the text.`, pc < .6);
+    }
+    if (k === 'B') { const c = g.filter(x => x.contr).length; add(k, `Repeats: ${c ? `you changed contractions ${c} time(s). Repeat exactly what you hear, so “she’ll” stays “she’ll”. ` : ''}Practise “shadowing”: play a short English clip, pause after each sentence and repeat it word-for-word. Longer sentences are where points are lost, so build up to 12–15 words.`, pc < .6); }
+    if (k === 'C') add(k, 'Sentence builds: find the subject first (who or what), then the verb, then the rest (object, place, time). Say the sentence once, clearly, and don’t add words like “the” or “that”.', pc < .6);
+    if (k === 'D') add(k, 'Conversations: guess what the question will ask (who, where, when, why) while you listen, and note the key detail in your head. Answer with just that detail: “To Singapore.”', pc < .6);
+    if (k === 'E') { const s = g[0] && g[0].stat; add(k, `Typing: ${s ? `${s.wpm} words a minute at ${Math.round(s.acc * 100)}% accuracy. ` : ''}Do 10 minutes a day on a typing trainer, working on accuracy first. Capitals and punctuation count, and every backspace costs you time.`, pc < .6); }
+    if (k === 'F') { const wr = g.filter(x => x.score < 1).slice(0, 3).map(x => `“${x.q.replace('___', '____')}” → ${x.exp.split(' / ')[0]}`); add(k, `Sentence completion: read the whole sentence before answering. The clue is often after the blank. Check the word form (past tense, plural, preposition). ${wr.length ? 'Review: ' + wr.join('; ') : ''}`, pc < .6); }
+    if (k === 'G') add(k, 'Dictation: type while you still remember the sound, and fix spelling at the end. Contractions (she’ll, didn’t), plurals and small words (a, the, to) are the most common errors. Start with a capital letter and end with . or ?', pc < .6);
+    if (k === 'H') add(k, 'Passage reconstruction: while reading, note who, what happened, the problem and the result. Then write 4–5 short, simple sentences in your own words, in the same order as the story.', pc < .6);
+    if (k === 'I') add(k, 'Summary & opinion: for the summary, write the author’s view plus 2 of their reasons in 30–45 words. For the opinion, use “In my opinion… because… For example… Therefore…” in 60–90 words. Leave a minute to check spelling.', pc < .6);
+  }
+  return T;
+}
+function bar(label, v) { return `<div class="skill"><span>${label}</span><div class="track"><div class="fill" style="width:${v === null ? 0 : Math.round(v * 100)}%"></div></div><b>${v === null ? '–' : to80(v)}</b></div>`; }
+function renderResults(run) {
+  hideClock(); $('#endbtn').classList.remove('on');
+  run.results = true;
+  const r = compute(run);
+  saveHist(run, r);
+  const o = to80(r.overall), [lv, lvn] = cefr(o);
+  const strongest = Object.entries(r.skills).filter(x => x[1] !== null).sort((a, b) => b[1] - a[1]);
+  const tips = tipsFor(r);
+  const ai = aiData && Array.isArray(aiData.coaching) ? aiData.coaching.map(String) : [];
+  const anyTyped = run.parts.some(p => 'BCD'.includes(p.key) && p.resp.some(x => x && x.typed));
+  const skippedA = run.parts.some(p => p.key === 'A' && p.skipped);
+  const weakest = Object.entries(r.parts).sort((a, b) => a[1].pct - b[1].pct)[0];
+  const review = run.parts.filter(p => r.parts[p.key]).map(p => {
+    const v = r.parts[p.key];
+    return `<details class="rv"><summary><span>Part ${p.key}: ${esc(P[p.key].name)}</span><span>${Math.round(v.pct * 100)}%</span></summary>${v.g.map((g, i) => {
+      const [c, s] = mark(g.score);
+      let body = '';
+      if (p.key === 'D') body = `<div class="lab">Conversation</div><div style="white-space:pre-line">${esc(g.q)}</div><div class="lab" style="margin-top:6px">Your answer</div><div>${esc(g.got || '—')}</div><div class="lab" style="margin-top:6px">Model answer</div><div>${esc(g.exp)}</div>`;
+      else if (p.key === 'F') body = `<div>${esc(g.q).replace('___', `<b>[${esc(g.got || '—')}]</b>`)}</div><div class="note">Accepted answers include: ${esc(g.exp)}</div>`;
+      else if (p.key === 'H') body = `<div class="lab">Original</div><div>${esc(g.exp)}</div><div class="lab" style="margin-top:6px">Your version</div><div>${esc(g.got || '—')}</div>`;
+      else if (p.key === 'I') body = `<div class="lab">Passage: ${esc(g.q)}</div><div class="lab" style="margin-top:6px">Your summary</div><div>${esc(g.got ? g.got.sum : '—')}</div><div class="lab" style="margin-top:6px">Your opinion</div><div>${esc(g.got ? g.got.op : '—')}</div>`;
+      else if (p.key === 'E') body = `<div class="lab">You typed</div><div>${esc(g.got || '—')}</div>`;
+      else body = `${p.key === 'C' ? `<div class="note">${esc(g.q)}</div>` : ''}<div class="lab">Expected</div><div>${esc(g.exp)}</div>${g.got !== undefined ? `<div class="lab" style="margin-top:6px">${p.key === 'G' ? 'You typed' : 'We heard'}</div><div>${esc(g.got)}</div>${g.diff ? `<div class="lab" style="margin-top:6px">Comparison</div><div>${g.diff}</div>` : ''}` : ''}`;
+      return `<div class="it"><span class="mk ${c}">${s}</span><b>Q${i + 1}</b> <span class="mute small">${Math.round(g.score * 100)}%</span>${g.pending ? ' <span class="small mute">(waiting for Claude to check)</span>' : ''}<div style="margin-top:6px">${body}</div>${g.ai ? `<div class="note"><b>Claude:</b> ${esc(g.ai)}</div>` : ''}${g.aiC ? `<div class="note">${esc(g.aiC)}</div>` : ''}${g.notes.map(n => `<div class="note">${esc(n)}</div>`).join('')}</div>`;
+    }).join('')}</details>`;
+  }).join('');
+  const practice = run.mode === 'custom' || run.mode === 'drill';
+  const pp = Math.round(practicePct(r) * 100);
+  const chosen = ORDER.filter(k => r.parts[k]);
+  stage.innerHTML = `${practice ? `<div class="card">
+    <div class="hero"><div class="big">${pp}<small>%</small></div>
+      <div><div class="mute small">Part practice · ${run.size === 'quick' ? 'half' : 'full'} question count · ${new Date().toLocaleDateString()}</div>
+      <h1 style="margin:4px 0 6px">${chosen.length === 1 ? `Part ${chosen[0]}: ${esc(P[chosen[0]].name)}` : `Parts ${chosen.join(', ')}`}</h1>
+      <p class="mute" style="margin:0">${chosen.length ? `Your score for ${chosen.length === 1 ? 'this part' : 'these parts'} only. ${pp >= 85 ? 'Strong. You\u2019re ready for this section.' : pp >= 65 ? 'Good, with a few things to tighten up below.' : 'Keep practising, and use the review below to see exactly where points were lost.'}` : 'No answers were recorded.'}</p>
+      ${aiData && aiData.level_comment ? `<p class="mute" style="margin:6px 0 0">${esc(aiData.level_comment)}</p>` : ''}
+      <p class="small" id="aist" style="margin:10px 0 0"></p></div></div>
+  </div>` : `<div class="card">
+    <div class="hero"><div class="big">${o}<small> / 80</small></div>
+      <div><div class="mute small">${run.mode === 'drill' ? 'Part practice' : run.mode === 'quick' ? 'Quick test' : 'Full test'} · ${new Date().toLocaleDateString()}</div>
+      <h1 style="margin:4px 0 6px">Estimated level: ${lv}, ${esc(lvn)}</h1>
+      <p class="mute" style="margin:0">${aiData && aiData.level_comment ? esc(aiData.level_comment) : strongest.length ? `Your strongest skill was ${strongest[0][0].toLowerCase()}${strongest.length > 1 ? ` and your weakest was ${strongest[strongest.length - 1][0].toLowerCase()}` : ''}.` : ''}</p>
+      <p class="small" id="aist" style="margin:10px 0 0"></p></div></div>
+    <div class="sec" style="margin-top:24px"><h2>Skills</h2>${['Speaking', 'Listening', 'Reading', 'Writing'].map(s => bar(s, r.skills[s])).join('')}
+    <p class="note">This is a 20–80 scale like the one Versant reports, and the CEFR level is a rough guide. ${anyTyped ? 'Some speaking answers were typed, so speaking was only partly measured. ' : ''}${skippedA ? 'Read aloud was skipped because there was no mic. ' : ''}Speaking is judged by how well the speech recogniser understood your words, so clear pronunciation shows up as accuracy.</p></div>
+  </div>`}
+  <div class="sec"><h2>Score by part</h2><table class="stack"><thead><tr><th>Part</th><th>Skill</th><th class="n">Questions</th><th class="n">Score</th></tr></thead><tbody>${ORDER.filter(k => r.parts[k]).map(k => `<tr><td><b>${k}</b> ${esc(P[k].name)}</td><td>${esc(P[k].skill)}</td><td class="n">${r.parts[k].n}</td><td class="n"><b>${Math.round(r.parts[k].pct * 100)}%</b></td></tr>`).join('')}</tbody></table></div>
+  <div class="sec"><h2>How to improve</h2><div class="tips">${ai.map(t => `<div class="tip"><b>Claude's coaching:</b> ${esc(t)}</div>`).join('')}${tips.map(t => `<div class="tip ${t.w ? 'w' : ''}"><b>Part ${t.k}.</b> ${esc(t.t)}</div>`).join('') || '<div class="tip">Excellent work across every part. Keep your timing steady and stay calm on test day.</div>'}
+    <div class="tip"><b>On test day:</b> use a wired headset mic in a quiet room, in Chrome 137 or newer on a laptop, with your face well lit. Speak at a normal volume and start as soon as the beep or prompt appears.</div></div>
+    <div class="row">${weakest && chosen.length > 1 ? `<button class="btn" id="drillw" type="button">Practise Part ${weakest[0]}: ${esc(P[weakest[0]].name)}</button>` : ''}<button class="btn ${chosen.length > 1 ? 'ghost' : ''}" id="again" type="button">${practice ? 'Practise ' + (chosen.length === 1 ? 'this part' : 'these parts') + ' again' : 'Take a new test'}</button><button class="btn ghost" id="home" type="button">Back to start</button></div></div>
+  <div class="sec"><h2>Review every answer</h2><p class="mute small">Struck-through words were missed, highlighted words were different, and <span class="extra">+words</span> were extra.</p>${review}</div>
+  <div class="sec">${histHTML()}</div>`;
+  renderAIStatus();
+  const dw = $('#drillw'); if (dw) dw.onclick = () => startRun('custom', [weakest[0]], run.size === 'quick' ? 'quick' : 'full');
+  $('#again').onclick = () => practice ? startRun('custom', run.only || chosen, run.size) : startRun(run.mode, null);
+  $('#home').onclick = home;
+  window.scrollTo(0, 0);
+}
+function histHTML() {
+  const h = store.get('hist', []);
+  if (!h.length) return '';
+  return `<h2>Your past attempts</h2><div class="hist">${h.slice(0, 12).map(x => { const pr = x.mode === 'custom' || x.mode === 'drill'; const parts = [].concat(x.only || []).join(', '); const val = pr ? (x.pc ?? Object.values(x.p || {})[0] ?? 0) : x.o; return `<div class="hr"><span>${new Date(x.d).toLocaleDateString(undefined, {day: 'numeric', month: 'short'})} · ${pr ? 'Part' + (parts.length > 1 ? 's ' : ' ') + esc(parts) : x.mode === 'quick' ? 'Quick test' : 'Full test'}</span><div class="track"><div class="fill" style="width:${pr ? val : Math.round((x.o - 20) / 60 * 100)}%;${pr ? 'opacity:.6' : ''}"></div></div><b style="text-align:right">${pr ? val + '%' : x.o}</b></div>`; }).join('')}</div><p class="note">Full and quick tests show the 20–80 score. Part practice shows a percentage. Saved in this browser only.</p>`;
+}
+
+/* ---------- home ---------- */
+function home() {
+  RUN = null; strip(); hideClock(); $('#endbtn').classList.remove('on');
+  stage.innerHTML = `<div class="grid2">
+   <div><h1>Practise the communication skills test as if it were real</h1>
+    <p class="lede">The same nine parts, timings and rules as the Versant English Placement Test in your Deloitte guide. The audio plays once, your answers are recorded, and at the end you get a score, a level and a full review. Questions are drawn at random, so every attempt is different.</p>
+    <div class="modes">
+      <button class="mode main" id="mFull" type="button"><b>Full test · about 50 minutes</b><span>All 9 parts, 82 questions, real timings. Best as a dress rehearsal.</span></button>
+      <button class="mode" id="mQuick" type="button"><b>Quick test · about 25 minutes</b><span>All 9 parts with half the questions. Good for daily practice.</span></button>
+    </div>
+    <div class="sec" style="margin-top:22px"><h3>Practise only certain parts</h3><p class="mute small" style="margin:0">Pick one or more parts. Your results will show scores for those parts only.</p>
+      <div class="drills" id="picks">${ORDER.map(k => `<button class="chip pick" data-k="${k}" aria-pressed="false" type="button">${k} · ${esc(P[k].name)}</button>`).join('')}</div>
+      <div class="drills" style="margin-top:12px"><span class="small mute" style="align-self:center">Quick picks:</span>
+        <button class="chip preset" data-p="ABCD" type="button">Speaking (A–D)</button><button class="chip preset" data-p="BCDG" type="button">Listening (B, C, D, G)</button><button class="chip preset" data-p="EFGHI" type="button">Writing (E–I)</button><button class="chip preset" data-p="" type="button">Clear</button></div>
+      <div class="row"><button class="btn" id="goPick" type="button" disabled>Choose parts to practise</button>
+        <label class="small" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="half" style="width:18px;height:18px"> Half the questions</label></div></div>
+   </div>
+   <div class="card"><h2>System check</h2><p class="mute small" style="margin-top:0">Like the real test, check your audio first. Use a wired headset in a quiet room.</p>
+    <div class="check">
+     <div class="ckw"><div class="ck"><span><span class="dot" id="dA"></span><b>Audio</b> <span class="mute small" id="tA">checking…</span></span><button class="chip" id="bA" type="button">Play a test sound</button></div><div id="pA" aria-live="polite"></div></div>
+     <div class="ckw"><div class="ck"><span><span class="dot" id="dM"></span><b>Microphone</b> <span class="mute small" id="tM">checking…</span></span><button class="chip" id="bM" type="button">Test mic</button></div><div id="pM" aria-live="polite"></div></div>
+     <div class="ck"><span><span class="dot" id="dS"></span><b>Writing grader</b> <span class="mute small" id="tS">checking…</span></span></div>
+    </div>
+    ${IS_FILE && (window.SpeechRecognition || window.webkitSpeechRecognition) ? FILE_NOTE : ''}
+    <div class="sec" style="margin-top:20px"><h3>On the day</h3><ul class="small" style="padding-left:18px;margin:6px 0 0">
+     <li>Laptop or desktop with Chrome 137+, webcam on, wired mic (not Bluetooth)</li>
+     <li>A quiet room where you're alone and your phone is away; restart your router and laptop first</li>
+     <li>Finish the test in one go and stay visible on camera</li></ul></div>
+   </div></div>
+   <div class="sec"><h2>The nine parts</h2><div class="parts">${ORDER.map(k => `<div class="pt"><b>${k}</b> · <b style="color:inherit">${esc(P[k].name)}</b><div class="small mute">${COUNTS.full[k]} question${COUNTS.full[k] > 1 ? 's' : ''} · ${esc(P[k].time)} · ${esc(P[k].skill)}</div></div>`).join('')}</div></div>
+   <div class="sec">${histHTML()}</div>`;
+  const go = (m, k, size) => { if (capsDone) startRun(m, k, size); };
+  $('#mFull').onclick = () => go('full');
+  $('#mQuick').onclick = () => go('quick');
+  const sel = new Set(store.get('picks', []));
+  const syncPicks = () => {
+    stage.querySelectorAll('.pick').forEach(b => { const on = sel.has(b.dataset.k); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    const n = sel.size, g = $('#goPick');
+    g.disabled = !n || !capsDone;
+    g.textContent = n ? `Practise ${n === 1 ? 'Part ' + [...sel][0] : n + ' parts'} (${ORDER.filter(k => sel.has(k)).join(', ')})` : 'Choose parts to practise';
+    store.set('picks', [...sel]);
+  };
+  stage.querySelectorAll('.pick').forEach(b => b.onclick = () => { const k = b.dataset.k; sel.has(k) ? sel.delete(k) : sel.add(k); syncPicks(); });
+  stage.querySelectorAll('.preset').forEach(b => b.onclick = () => { sel.clear(); b.dataset.p.split('').forEach(k => sel.add(k)); syncPicks(); });
+  try { $('#half').checked = store.get('half', false); } catch (e) {}
+  $('#half').onchange = () => store.set('half', $('#half').checked);
+  $('#goPick').onclick = () => { if (sel.size) go('custom', ORDER.filter(k => sel.has(k)), $('#half').checked ? 'quick' : 'full'); };
+  syncPicks();
+  window.__syncPicks = syncPicks;
+  const panel = (id, cls, html) => { const el = document.getElementById(id); if (!el) return; el.className = 'ckp ' + cls; el.innerHTML = html; };
+  const bars = '<span class="bars sm"><i></i><i></i><i></i><i></i><i></i></span>';
+  let audioBusy = false;
+  $('#bA').onclick = async () => {
+    if (audioBusy) return; audioBusy = true; unlockAudio();
+    const b = $('#bA'); b.disabled = true; b.textContent = 'Playing…';
+    $('#dA').className = 'dot mid';
+    panel('pA', 'act', `${bars}<div><b>Playing a test sentence now.</b><br>Listen in your headphones: “This is a sound check…”</div>`);
+    await beep(660, 140);
+    await Promise.race([say([{text: 'This is a sound check. If you can hear this clearly, your audio is ready.'}]), wait(20000)]);
+    audioBusy = false; b.disabled = false; b.textContent = 'Play again';
+    panel('pA', 'ask', `<div><b>Did you hear the sentence clearly?</b><div class="row" style="margin-top:10px"><button class="btn" id="aYes" type="button">Yes, I heard it</button><button class="btn ghost" id="aNo" type="button">No, I heard nothing</button></div></div>`);
+    $('#aYes').onclick = () => { $('#dA').className = 'dot ok'; $('#tA').textContent = 'working'; panel('pA', 'ok', '<div><b>✓ Audio is working.</b> You’re ready for the listening questions.</div>'); };
+    $('#aNo').onclick = () => { $('#dA').className = 'dot no'; $('#tA').textContent = 'not heard'; panel('pA', 'bad', `<div><b>✗ No sound heard.</b> Try these, then click <b>Play again</b>:<ul><li>Turn up your computer volume and unmute it</li><li>Check that your headphones are the selected output device (Windows: the speaker icon in the taskbar)</li><li>Right-click this browser tab and make sure it isn’t muted</li><li>Unplug and reconnect your headphones</li></ul></div>`); };
+  };
+  let micBusy = false;
+  $('#bM').onclick = () => {
+    if (!D || micBusy) return; micBusy = true; unlockAudio();
+    const b = $('#bM'); b.disabled = true; b.textContent = 'Starting…';
+    $('#dM').className = 'dot mid';
+    panel('pM', 'act', '<div><span class="spin"></span> <b>Asking for microphone access…</b><br>If Chrome shows a pop-up, click <b>Allow</b>.</div>');
+    let t = '', part = '';
+    let p; try { p = D.start(); } catch (e) { p = Promise.reject(e); }
+    Promise.resolve(p).then(() => {
+      let left = 7, stopped = false;
+      const draw = () => {
+        const heard = (t + ' ' + part).trim();
+        panel('pM', 'rec', `<div style="width:100%"><b><span class="recdot"></span>Recording · ${left}s left</b><br>Say out loud: <b>“My name is … and I am ready for the test.”</b><div class="heard">${heard ? 'We hear: “' + esc(heard) + '”' : '<span class="mute">Waiting for your voice…</span>'}</div></div>`);
+      };
+      rec = {final: x => { t += ' ' + x; part = ''; draw(); }, partial: x => { part = x; draw(); }};
+      b.disabled = false; b.textContent = 'Stop';
+      const finishMic = async () => {
+        if (stopped) return; stopped = true; clearInterval(iv);
+        b.disabled = true; b.textContent = 'Checking…';
+        await within(D.stop(), 2500); rec = null; micBusy = false;
+        b.disabled = false; b.textContent = 'Test again'; b.onclick = $('#bM').__h;
+        const heard = (t + ' ' + part).trim();
+        if (heard) { $('#dM').className = 'dot ok'; $('#tM').textContent = 'working'; panel('pM', 'ok', `<div><b>✓ Microphone is working.</b><div class="heard">We heard: “${esc(heard)}”</div><span class="small">If the words above are mostly right, your speaking answers will be scored well.</span></div>`); }
+        else { $('#dM').className = 'dot no'; $('#tM').textContent = 'no words heard'; panel('pM', 'warn', `<div><b>⚠ We didn’t catch any words.</b><ul><li>Speak a little louder, with the mic close to your mouth</li><li>Check that Chrome is using the right mic: click the mic icon in the address bar</li><li>Close other apps that use the mic (Zoom, Teams, WhatsApp)</li></ul>Then click <b>Test again</b>.</div>`); }
+      };
+      b.onclick = () => { if (!stopped) finishMic(); };
+      draw();
+      const iv = setInterval(() => { left--; if (left <= 0) finishMic(); else draw(); }, 1000);
+    }).catch(e => {
+      rec = null; micBusy = false; b.disabled = false; b.textContent = 'Try again';
+      b.onclick = $('#bM').__h;
+      const c = e && e.code;
+      $('#dM').className = 'dot no'; $('#tM').textContent = c === 'not_granted' ? 'blocked' : 'not working';
+      panel('pM', 'bad', c === 'not_granted'
+        ? '<div><b>✗ Microphone access is blocked.</b> Click the lock or mic icon at the left of the address bar, set <b>Microphone</b> to <b>Allow</b>, reload the page, then click <b>Try again</b>.</div>'
+        : c === 'network' ? '<div><b>✗ Speech recognition couldn’t connect.</b> Chrome needs the internet for this. Check your connection, then click <b>Try again</b>.</div>'
+        : '<div><b>✗ The microphone didn’t start.</b> Check that a mic is plugged in and not in use by another app, then click <b>Try again</b>.</div>');
+    });
+  };
+  $('#bM').__h = $('#bM').onclick;
+  const upd = () => {
+    if (!document.getElementById('dA')) return;
+    $('#dA').className = 'dot ' + (audioMode === 'text' ? 'no' : ''); $('#tA').textContent = audioLabel();
+    $('#dM').className = 'dot ' + (D ? '' : 'no'); $('#tM').textContent = D ? 'not tested yet' : 'not available in this browser. Use Chrome';
+    $('#bM').disabled = !D;
+    $('#dS').className = 'dot ' + (S ? 'ok' : 'mid'); $('#tS').textContent = S ? 'Claude grades your writing' : 'automatic scoring only';
+    stage.querySelectorAll('.mode').forEach(b => b.disabled = false); if (window.__syncPicks) window.__syncPicks();
+  };
+  if (capsDone) upd(); else { stage.querySelectorAll('.mode').forEach(b => b.disabled = true); window.__onCaps = upd; }
+}
+function startRun(m, k, size) {
+  unlockAudio();
+  const keys = k ? [].concat(k) : ORDER;
+  const needs = keys.some(x => 'ABCD'.includes(x));
+  if (!needs || !D || typedSpeech || (D.isOpen && D.isOpen())) { runTest(m, k, size); return; }
+  let p; try { p = D.start(); } catch (e) { p = Promise.reject(e); }
+  micGate(Promise.resolve(p), m, k, size);
+}
+const IS_FILE = location.protocol === 'file:';
+const FILE_NOTE = `<div class="tip w" style="margin:14px 0"><b>You've opened this page as a file on your computer.</b> In this mode, Chrome forgets your microphone permission and keeps asking during the speaking questions. While its pop-up is showing, the mic doesn't record, so answers come out empty.<br><b>Fix:</b> open the page from a web link instead, and Chrome will ask only once:<ol style="margin:8px 0 0;padding-left:20px"><li>Go to <b>app.netlify.com/drop</b> in Chrome</li><li>Drag this <b>index.html</b> file onto the page</li><li>Open the link it gives you and choose <b>“Allow while visiting the site”</b></li></ol>Or use the claude.ai link to this page. You can also carry on here and type your spoken answers.</div>`;
+function micGate(p, m, k, size) {
+  hideClock();
+  stage.innerHTML = `<div class="task card"><h1>Allow microphone access</h1><p class="lede">The speaking parts record your voice. If your browser asks, click <b>Allow</b>. You'll only be asked once, before the test starts.</p><p id="mgs"><span class="spin"></span> Waiting for permission…</p>${IS_FILE && D && D.persistent ? FILE_NOTE + '<div class="row"><button class="btn ghost" id="mgType0" type="button">Type my spoken answers instead</button></div>' : ''}</div>`;
+  const t0 = document.getElementById('mgType0'); if (t0) t0.onclick = () => { try { D.close(); } catch (e) {} typedSpeech = true; runTest(m, k, size); };
+  const hatch = setTimeout(() => { const c = stage.querySelector('.card'); if (c && document.getElementById('mgs') && !document.getElementById('mgType')) c.insertAdjacentHTML('beforeend', `<div class="row"><button class="btn ghost" id="mgType" type="button">Skip and type my spoken answers</button></div>`), $('#mgType').onclick = () => { typedSpeech = true; runTest(m, k, size); }; }, 8000);
+  p.then(async () => {
+    clearTimeout(hatch);
+    $('#mgs').innerHTML = '<span class="spin"></span> Checking the microphone…';
+    await wait(800);
+    const err = D.lastError;
+    if (!D.persistent) await within(D.stop(), 2500);
+    if (err === 'network') throw {code: 'network'};
+    if (err === 'not-allowed') throw {code: 'not_granted'};
+    $('#mgs').innerHTML = '<span class="dot ok"></span>Microphone ready. Starting the test…';
+    await wait(700);
+    runTest(m, k, size);
+  }).catch(e => {
+    clearTimeout(hatch); const old = document.getElementById('mgType'); if (old) old.parentElement.remove();
+    const c = e && e.code;
+    const why = c === 'not_granted' ? 'Microphone access was blocked. Click the lock or mic icon in the address bar, set Microphone to <b>Allow</b>, then try again.'
+      : c === 'network' ? 'Speech recognition in this browser needs an internet connection, and it couldn’t connect.'
+      : c === 'dismissed' ? 'The permission prompt was closed before you answered.'
+      : 'The microphone couldn’t start. Check that a mic is plugged in and not being used by another app.';
+    $('#mgs').innerHTML = `<span class="dot no"></span>${why}`;
+    stage.querySelector('.card').insertAdjacentHTML('beforeend', `<div class="row"><button class="btn" id="mgTry" type="button">Try again</button><button class="btn ghost" id="mgType" type="button">Continue and type my spoken answers</button><button class="btn ghost" id="mgBack" type="button">Back</button></div>`);
+    $('#mgTry').onclick = () => { let q; try { q = D.start(); } catch (x) { q = Promise.reject(x); } micGate(Promise.resolve(q), m, k, size); };
+    $('#mgType').onclick = () => { typedSpeech = true; runTest(m, k, size); };
+    $('#mgBack').onclick = home;
+  });
+}
+const audioLabel = () => audioMode === 'claude' ? 'not tested yet (Claude voice)' : audioMode === 'browser' ? 'not tested yet (browser voice)' : audioMode === 'checking' ? 'checking…' : 'no audio, so audio prompts will show as text for a moment';
+home();
+}
+
+</script>
+</body>
+</html>
