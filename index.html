@@ -362,7 +362,7 @@ const stage = $('#stage');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const store = {
-  get(k, d) { try { const v = localStorage.getItem('vept_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  get(k, d) { try { const v = localStorage.getItem('vept_' + k); const x = v ? JSON.parse(v) : d; if (Array.isArray(d) && !Array.isArray(x)) return d; if (typeof d === 'boolean' && typeof x !== 'boolean') return d; return x; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('vept_' + k, JSON.stringify(v)); } catch (e) {} }
 };
 
@@ -723,7 +723,7 @@ const RUNNERS = {
     const s1 = $('#s1'), s2 = $('#s2');
     const upd = () => { const a = wcount(s1.value), b = wcount(s2.value); $('#w1').textContent = a + ' words'; $('#w1').classList.toggle('ok', a >= 25 && a <= 50); $('#w2').textContent = b + ' words'; $('#w2').classList.toggle('ok', b >= 50); };
     s1.oninput = upd; s2.oninput = upd;
-    const done = () => userOK() && finish({sum: s1.value.trim(), op: s2.value.trim()});
+    const done = () => { const b = $('#sub'); if (b) b.textContent = 'Submitting…'; finish({sum: s1.value.trim(), op: s2.value.trim()}); };
     $('#sub').onclick = done; setF(done); clock(mins * 60, done);
   })
 };
@@ -791,6 +791,10 @@ function intro(key, run) {
   });
 }
 async function runTest(mode, only, size) {
+  try { await runTestInner(mode, only, size); }
+  catch (err) { console.error(err); aborted = true; try { finishTest(); } catch (e) {} }
+}
+async function runTestInner(mode, only, size) {
   RUN = build(mode, only, size); aborted = false;
   $('#endbtn').classList.add('on');
   for (RUN.pi = 0; RUN.pi < RUN.parts.length; RUN.pi++) {
@@ -1008,6 +1012,7 @@ ${JSON.stringify({sentence_completion: fc, passage_reconstruction: pr, summary_o
   try {
     const v = await S.json(prompt, {modelTier: 'default'});
     aiData = v && typeof v === 'object' ? v : null;
+    if (aiData) store.set('aiok', true);
     if (aiData) applyAI(run, aiData);
     aiState = aiData ? 'done' : 'failed';
   } catch (e) { aiState = e && e.code === 'not_granted' ? 'denied' : 'failed'; }
@@ -1032,6 +1037,16 @@ function renderAIStatus() {
 
 /* ---------- results ---------- */
 function finishTest() {
+  try { finishTestInner(); }
+  catch (err) {
+    console.error(err);
+    hideClock();
+    stage.innerHTML = `<div class="task card"><h1>Your answers were saved, but the results page hit a problem</h1><p class="lede">Nothing you wrote is lost. Click below to try showing your results again.</p><div class="tip w">Error: ${esc(err && (err.message || err))}</div><div class="row"><button class="btn" id="retryRes" type="button">Show my results</button><button class="btn ghost" id="errHome" type="button">Back to start</button></div></div>`;
+    $('#retryRes').onclick = () => { try { RUN.parts.forEach(p => { delete p.graded; }); renderResults(RUN); } catch (e2) { $('#retryRes').textContent = 'Still failing: ' + (e2.message || e2); } };
+    $('#errHome').onclick = home;
+  }
+}
+function finishTestInner() {
   const run = RUN;
   aiState = 'idle'; aiData = null;
   run.parts.forEach(p => { delete p.graded; });
@@ -1040,7 +1055,7 @@ function finishTest() {
   saveHist(run, r);
   renderResults(run);
   const needAI = run.parts.some(p => (p.key === 'H' || p.key === 'I' || p.key === 'F') && p.resp.length);
-  if (S && needAI) runAI(run, false);
+  if (S && needAI && store.get('aiok', false)) runAI(run, false);
 }
 const practicePct = r => { const v = Object.values(r.parts); return v.length ? v.reduce((a, x) => a + x.pct, 0) / v.length : 0; };
 function saveHist(run, r) {
