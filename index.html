@@ -395,33 +395,51 @@ let T = null, D = null, S = null, capsDone = false, typedSpeech = false, audioMo
 function srAdapter() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
-  let r = null, fin = [], par = [], isOpen = false;
+  let cur = null, sid = 0, fin = [], par = [], endRes = null;
   const ad = {
-    persistent: true, lastError: null, denied: false,
-    isOpen: () => isOpen,
-    open() {
-      if (isOpen) return Promise.resolve();
+    persistent: true, denied: false, lastError: null, want: false, restarts: 0,
+    isOpen: () => !ad.denied,
+    _spawn(onStart, onFail) {
+      const my = ++sid;
+      const x = new SR(); x.lang = 'en-US'; x.continuous = true; x.interimResults = true; x.maxAlternatives = 1;
+      let begun = false;
+      x.onstart = () => { if (my !== sid) return; begun = true; onStart && onStart(); };
+      x.onresult = e => { if (my !== sid) return; let interim = ''; for (let i = e.resultIndex; i < e.results.length; i++) { const y = e.results[i]; if (y.isFinal) fin.forEach(f => f({text: y[0].transcript})); else interim += y[0].transcript; } par.forEach(f => f({text: interim})); };
+      x.onerror = e => {
+        if (my !== sid) return;
+        ad.lastError = e.error;
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ad.denied = true; ad.want = false; }
+        if (!begun && onFail && e.error !== 'no-speech' && e.error !== 'aborted') { const f = onFail; onFail = null; f({code: ad.denied ? 'not_granted' : e.error}); }
+      };
+      x.onend = () => {
+        if (my !== sid) return;
+        cur = null;
+        if (ad.want && !ad.denied) { ad.restarts++; setTimeout(() => { if (ad.want && my === sid) ad._spawn(); }, 120); }
+        else if (endRes) { const r = endRes; endRes = null; r(); }
+      };
+      cur = x;
+      try { x.start(); } catch (err) { cur = null; if (onFail) onFail({code: 'start_failed'}); }
+    },
+    start() {
+      ad.close();
+      ad.want = true; ad.lastError = null;
       return new Promise((res, rej) => {
-        isOpen = true; ad.lastError = null; let settled = false;
-        const make = () => {
-          const x = new SR(); x.lang = 'en-US'; x.continuous = true; x.interimResults = true;
-          x.onresult = e => { let interim = ''; for (let i = e.resultIndex; i < e.results.length; i++) { const y = e.results[i]; if (y.isFinal) fin.forEach(f => f({text: y[0].transcript})); else interim += y[0].transcript; } par.forEach(f => f({text: interim})); };
-          x.onstart = () => { if (!settled) { settled = true; res(); } };
-          x.onerror = e => {
-            ad.lastError = e.error;
-            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ad.denied = true; isOpen = false; }
-            if (!settled && e.error !== 'no-speech' && e.error !== 'aborted') { settled = true; isOpen = false; rej({code: ad.denied ? 'not_granted' : e.error}); }
-          };
-          x.onend = () => { ad.restarts = (ad.restarts || 0) + 1; if (isOpen && !ad.denied && r === x) setTimeout(() => { if (isOpen && !ad.denied && r === x) { try { r = make(); r.start(); } catch (err) {} } }, 120); };
-          return x;
-        };
-        r = make();
-        try { r.start(); } catch (e) { isOpen = false; settled = true; rej(e); }
+        let done = false;
+        ad._spawn(() => { if (!done) { done = true; res(); } }, e => { if (!done) { done = true; ad.want = false; rej(e); } });
+        setTimeout(() => { if (!done) { done = true; ad.denied ? rej({code: 'not_granted'}) : res(); } }, 6000);
       });
     },
-    close() { isOpen = false; const x = r; r = null; try { x && x.abort(); } catch (e) {} },
-    start() { return ad.open(); },
-    stop() { return new Promise(res => setTimeout(() => { ad.close(); res(); }, 700)); },
+    stop() {
+      ad.want = false;
+      return new Promise(res => {
+        if (!cur) return res();
+        endRes = res;
+        try { cur.stop(); } catch (e) { endRes = null; res(); }
+        setTimeout(() => { if (endRes === res) { endRes = null; res(); } }, 1800);
+      });
+    },
+    close() { ad.want = false; sid++; const x = cur; cur = null; endRes = null; try { x && x.abort(); } catch (e) {} },
+    open() { return ad.start(); },
     onPartial(f) { par.push(f); }, onFinal(f) { fin.push(f); }, onState() {}
   };
   return ad;
@@ -596,14 +614,14 @@ function speakStep(o) {
     beep(880, 160);
     let text = '', part = '', started = false, stopping = false, heard = 0, sil = null;
     if (D.persistent && D.denied) { typedSpeech = true; typedUI('The browser blocked the microphone, so please type your spoken answers for the rest of this test.'); return; }
-    const live1 = !!(D.persistent && D.isOpen && D.isOpen());
+    const live1 = !!(D.persistent && !D.denied);
     box.innerHTML = `<div class="mic"><button class="micbtn" id="micb" type="button" aria-label="Start speaking"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><b id="mics">Click the mic or press <span class="kbd">Space</span> to start speaking</b><div class="live" id="live"></div><button class="linkbtn" id="toTyped" type="button">Mic not working? Type your answers instead</button></div>`;
     const live = $('#live'), mics = $('#mics'), mb = $('#micb');
     const show = () => { live.textContent = (text + ' ' + part).trim(); };
     const end = async () => {
       if (stopping) return; stopping = true; space = null;
       stopClock(); if (sil) clearInterval(sil);
-      if (started) { mics.textContent = 'Saving your answer…'; mb.disabled = true; if (live1) await wait(600); else await within(D.stop(), 2500); }
+      if (started) { mics.textContent = 'Saving your answer…'; mb.disabled = true; await within(D.stop(), 2500); }
       rec = null;
       finish({got: (text + ' ' + part).trim(), typed: false, started});
     };
@@ -622,7 +640,7 @@ function speakStep(o) {
       rec = {final: t => { text += ' ' + t; part = ''; heard = Date.now(); show(); }, partial: t => { part = t; if (t) heard = Date.now(); show(); }};
       let p;
       if (live1) {
-        p = D.isOpen() ? Promise.resolve() : D.open();
+        p = D.start();
         const quiet = o.audio ? 2200 : 3500;
         sil = setInterval(() => { if (heard && Date.now() - heard > quiet && (text + part).trim()) end(); }, 250);
       } else { try { p = D.start(); } catch (e) { p = Promise.reject(e); } }
@@ -764,7 +782,6 @@ function intro(key, run) {
     curFinish = () => { curFinish = null; res('abort'); };
     $('#go').onclick = async () => {
       curFinish = null; unlockAudio();
-      if ('ABCD'.includes(key) && D && D.persistent && !typedSpeech && !D.denied && !D.isOpen()) D.open().catch(() => { typedSpeech = true; });
       if ('BCDG'.includes(key) && !noMic) {
         const b = $('#go'); b.disabled = true; b.textContent = 'Starting\u2026';
         await say([{text: `Part ${key}. ${p.name}.`}]); await wait(500);
@@ -788,7 +805,7 @@ async function runTest(mode, only, size) {
       if (aborted) break;
     }
     const nxt = RUN.parts[RUN.pi + 1];
-    if (D && D.persistent && D.isOpen() && (!nxt || !'ABCD'.includes(nxt.key))) D.close();
+    if (D && D.persistent) D.close();
     if (aborted) break;
   }
   $('#endbtn').classList.remove('on'); hideClock(); rec = null;
@@ -1236,7 +1253,7 @@ function startRun(m, k, size) {
   unlockAudio();
   const keys = k ? [].concat(k) : ORDER;
   const needs = keys.some(x => 'ABCD'.includes(x));
-  if (!needs || !D || typedSpeech || (D.isOpen && D.isOpen())) { runTest(m, k, size); return; }
+  if (!needs || !D || typedSpeech) { runTest(m, k, size); return; }
   let p; try { p = D.start(); } catch (e) { p = Promise.reject(e); }
   micGate(Promise.resolve(p), m, k, size);
 }
@@ -1252,7 +1269,7 @@ function micGate(p, m, k, size) {
     $('#mgs').innerHTML = '<span class="spin"></span> Checking the microphone…';
     await wait(800);
     const err = D.lastError;
-    if (!D.persistent) await within(D.stop(), 2500);
+    await within(D.stop(), 2500);
     if (err === 'network') throw {code: 'network'};
     if (err === 'not-allowed') throw {code: 'not_granted'};
     $('#mgs').innerHTML = '<span class="dot ok"></span>Microphone ready. Starting the test…';
